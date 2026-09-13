@@ -12,6 +12,25 @@ const sceneHandler = source.slice(source.indexOf("  element('scene-setting').onc
 const lighting = source.slice(source.indexOf('  function applyLighting()'), source.indexOf("  element('fullscreen-button').onclick"));
 const selectionLabels = source.slice(source.indexOf('  function updateSelectionLabels()'), source.indexOf("  element('aircraft-setting').onchange"));
 
+test('photo mode labels follow the selected scene, including switching back to Fuji', () => {
+  const template = readFileSync(new URL('../src/template.html', import.meta.url), 'utf8');
+  assert.ok(/<span id="photo-label" class="photo-label">/.test(template), 'photo label has a stable DOM id');
+  const elements = new Map();
+  const element = (id) => {
+    if (!elements.has(id)) elements.set(id, { querySelector: () => ({}) });
+    return elements.get(id);
+  };
+  const context = {
+    element, canvas: { setAttribute() {} }, landmarkPosition: new THREE.Vector3(),
+    selectedAircraft: { name: 'F-35A', supportsAfterburner: true },
+  };
+  for (const selectedScene of [...SCENES, SCENES[0]]) {
+    context.selectedScene = selectedScene;
+    runInNewContext(`${selectionLabels}\nupdateSelectionLabels();`, context);
+    assert.equal(element('photo-label').textContent, `${selectedScene.name.toUpperCase()} / PHOTO`);
+  }
+});
+
 test('every scene positions its landmark label at a finite world-space summit or rooftop', () => {
   const element = () => ({ setAttribute() {}, querySelector: () => ({}) });
   const landmarkPosition = new THREE.Vector3();
@@ -96,6 +115,7 @@ test('lighting changes the real world sky, sun, ambient light, stars and moon wi
   assert.equal(context.world.moon.visible, true);
   assert.equal(element('light-setting').disabled, true);
   assert.equal(context.world.sun.intensity, 0.35);
+  assert.ok(world.sky.material.uniforms.sunlight.value.equals(new THREE.Color(colors.moon)));
   element('day-setting').value = 'day';
   element('day-setting').onchange();
   assert.equal(context.dayPeriod, 'day');
@@ -104,4 +124,11 @@ test('lighting changes the real world sky, sun, ambient light, stars and moon wi
   assert.equal(context.world.moon.visible, false);
   assert.equal(context.world.hemisphere.intensity, 1.85);
   assert.equal(element('light-setting').disabled, false);
+  for (const style of ['morning', 'golden', 'noon', 'golden', 'morning']) {
+    element('light-setting').value = style;
+    element('light-setting').onchange();
+    const expected = new THREE.Color(colors[style === 'golden' ? 'sky-horizon' : 'sun']);
+    assert.ok(world.sun.color.equals(expected), style);
+    assert.ok(world.sky.material.uniforms.sunlight.value.equals(expected), style);
+  }
 });
