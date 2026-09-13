@@ -461,6 +461,7 @@ function boot() {
     canvas.setAttribute('aria-label', `3D flight over ${selectedScene.name}`);
     element('aircraft-label').textContent = selectedAircraft.name;
     element('scene-label').textContent = selectedScene.name.toUpperCase();
+    element('photo-label').textContent = `${selectedScene.name.toUpperCase()} / PHOTO`;
     element('selection-label').textContent = `${selectedAircraft.name} / ${selectedScene.name}`;
     element('location-name').textContent = `${selectedScene.name}, Japan`;
     element('location-coordinates').textContent = `${selectedScene.latitude.toFixed(4)}° N  ${selectedScene.longitude.toFixed(4)}° E`;
@@ -526,6 +527,7 @@ function boot() {
     world.sky.material.uniforms.daylight.value = night ? 0 : 1;
     world.scene.fog.color.copy(world.sky.material.uniforms.horizon.value);
     world.sun.color.set(palette(night ? 'moon' : warm ? 'sky-horizon' : 'sun'));
+    world.sky.material.uniforms.sunlight.value.copy(world.sun.color);
     world.sun.intensity = night ? 0.35 : warm ? 3.6 : setting === 'noon' ? 3.5 : 3.1;
     world.hemisphere.intensity = night ? 0.65 : 1.85;
     world.hemisphere.color.set(palette(night ? 'night-horizon' : 'snow'));
