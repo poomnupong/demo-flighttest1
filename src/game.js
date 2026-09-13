@@ -1,13 +1,16 @@
 import * as THREE from 'three';
-import { createIcons, Mountain, Camera, Aperture, VolumeX, Volume2, Pause, Play, SlidersHorizontal, Navigation, RotateCcw, X, Download, Maximize, Rocket, Plus, Minus } from 'lucide';
-import { FlightModel, autopilotInput, ROUTE, FUJI, terrainHeight, clamp } from './flight.js';
-import { createWorld, createJet } from './world.js';
+import { createIcons, Mountain, Camera, Aperture, VolumeX, Volume2, Pause, Play, Settings, Navigation, RotateCcw, X, Download, Maximize, Rocket, Plus, Minus } from 'lucide';
+import { FlightModel, autopilotInput, terrainHeight, EXTENT, clamp } from './flight.js';
+import { createWorld } from './world.js';
+import { AIRCRAFT, createJet, disposeAircraft } from './aircraft.js';
+import { SCENES, getScene } from './scenes.js';
+import { pitchInput, localDayPeriod } from './settings.js';
 
 function boot() {
   const element = (id) => document.getElementById(id);
   const styles = getComputedStyle(document.documentElement);
   const palette = (name) => styles.getPropertyValue(`--cp-${name}`).trim();
-  const icons = { Mountain, Camera, Aperture, VolumeX, Volume2, Pause, Play, SlidersHorizontal, Navigation, RotateCcw, X, Download, Maximize, Rocket, Plus, Minus };
+  const icons = { Mountain, Camera, Aperture, VolumeX, Volume2, Pause, Play, Settings, Navigation, RotateCcw, X, Download, Maximize, Rocket, Plus, Minus };
   const refreshIcons = () => createIcons({ icons, attrs: { 'stroke-width': 1.6 } });
   refreshIcons();
   const canvas = element('world');
@@ -18,8 +21,10 @@ function boot() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.03;
   const camera = new THREE.PerspectiveCamera(56, innerWidth / innerHeight, 0.15, 42000);
-  const world = createWorld(palette);
-  const aircraft = createJet(palette);
+  let selectedScene = getScene('fuji');
+  let selectedAircraft = AIRCRAFT[0];
+  let world = createWorld(palette, selectedScene.id);
+  let aircraft = createJet(palette, selectedAircraft.id);
   world.scene.add(aircraft.jet);
   const flight = new FlightModel();
   const keys = new Set();
@@ -32,6 +37,9 @@ function boot() {
   let photoPreviousCamera = 'chase';
   let settingsWasPaused = false;
   let sensitivity = 1;
+  let invertY = true;
+  let dayPeriod = 'day';
+  let lightMinute = -1;
   let drag = null;
   let snapCamera = true;
   let toastUntil = 0;
@@ -43,7 +51,12 @@ function boot() {
   let engineFilter;
   let engineTone;
   let bestScore = 0;
-  try { bestScore = Number(localStorage.getItem('fuji-flight-best')) || 0; } catch { }
+  const scoreKey = () => selectedScene.id === 'fuji' ? 'fuji-flight-best' : `fuji-flight-best-${selectedScene.id}`;
+  const loadBestScore = () => {
+    bestScore = 0;
+    try { bestScore = Number(localStorage.getItem(scoreKey())) || 0; } catch { }
+  };
+  loadBestScore();
   const jetPosition = new THREE.Vector3();
   const previousPosition = new THREE.Vector3().copy(flight.body.position);
   const forward = new THREE.Vector3();
@@ -52,7 +65,7 @@ function boot() {
   const desiredCamera = new THREE.Vector3();
   const followRotation = new THREE.Quaternion();
   const projected = new THREE.Vector3();
-  const landmarkPosition = new THREE.Vector3(FUJI.x, 3660, FUJI.z);
+  const landmarkPosition = new THREE.Vector3();
   const clock = new THREE.Clock();
   const timeString = (seconds) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
   const setIcon = (id, name) => {
@@ -75,7 +88,7 @@ function boot() {
     cameraMode = mode;
     view.azimuth = mode === 'orbit' ? 0.7 : innerWidth < 700 ? 0 : 0.05;
     view.elevation = mode === 'orbit' ? 0.32 : 0.25;
-    view.distance = (mode === 'orbit' ? 59 : 49) * (innerWidth < 700 ? 1.5 : 1);
+    view.distance = selectedAircraft.cameraDistance * (mode === 'orbit' ? 1.2 : 1) * (innerWidth < 700 ? 1.5 : 1);
     camera.fov = innerWidth < 700 ? 64 : 56;
     camera.updateProjectionMatrix();
     snapCamera = true;
@@ -102,8 +115,8 @@ function boot() {
     element('pause-screen').hidden = !show;
     element('flight-ui').inert = show;
     element('pause-title').textContent = 'Flight paused';
-    element('pause-eyebrow').textContent = flight.freeFlight ? 'Above the five lakes' : 'The Fuji circuit';
-    element('pause-detail').textContent = `${flight.freeFlight ? 'Free flight' : ROUTE[Math.min(flight.gateIndex, 7)].name} / ${timeString(flight.elapsed)}`;
+    element('pause-eyebrow').textContent = `${selectedScene.name} / ${flight.freeFlight ? 'Free flight' : 'Circuit'}`;
+    element('pause-detail').textContent = `${flight.freeFlight ? 'Free flight' : flight.route[Math.min(flight.gateIndex, 7)].name} / ${timeString(flight.elapsed)}`;
     element('resume-button').hidden = false;
     setIcon('pause-button', show ? 'play' : 'pause');
     if (show) element('resume-button').focus();
@@ -124,7 +137,7 @@ function boot() {
     element('resume-button').hidden = false;
     element('circuit-mode').setAttribute('aria-pressed', String(!freeFlight));
     element('free-mode').setAttribute('aria-pressed', String(freeFlight));
-    element('route-title').textContent = freeFlight ? 'Above the five lakes' : 'The Fuji circuit';
+    element('route-title').textContent = `${selectedScene.name} / ${freeFlight ? 'Explore' : 'Circuit'}`;
     element('route-progress').hidden = freeFlight;
     element('gate-count').hidden = freeFlight;
     element('autopilot-button').hidden = freeFlight;
@@ -144,7 +157,7 @@ function boot() {
     element('restart-button').focus();
     if (completed && flight.score > bestScore) {
       bestScore = flight.score;
-      try { localStorage.setItem('fuji-flight-best', String(bestScore)); } catch { }
+      try { localStorage.setItem(scoreKey(), String(bestScore)); } catch { }
     }
   }
   function openSettings() {
@@ -237,19 +250,21 @@ function boot() {
   mapBase.width = map.width;
   mapBase.height = map.height;
   const baseContext = mapBase.getContext('2d');
-  const mapPoint = (point) => ({ x: (point.x + 8000) / 16000 * map.width, y: (point.z + 11500) / 16000 * map.height });
-  for (let column = 0; column < map.width; column += 4) {
-    for (let row = 0; row < map.height; row += 4) {
-      const height = terrainHeight(column / map.width * 16000 - 8000, row / map.height * 16000 - 11500);
-      baseContext.fillStyle = palette(height < 38 ? 'water' : height > 2200 ? 'snow' : height > 1400 ? 'rock-light' : height > 700 ? 'grass-dark' : 'grass');
-      baseContext.fillRect(column, row, 4, 4);
+  const mapPoint = (point) => ({ x: (point.x + EXTENT) / (2 * EXTENT) * map.width, y: (point.z + EXTENT) / (2 * EXTENT) * map.height });
+  function rebuildMap() {
+    for (let column = 0; column < map.width; column += 4) {
+      for (let row = 0; row < map.height; row += 4) {
+        const height = terrainHeight(column / map.width * 2 * EXTENT - EXTENT, row / map.height * 2 * EXTENT - EXTENT, selectedScene.id);
+        baseContext.fillStyle = palette(height < 38 ? 'water' : height > 2200 ? 'snow' : height > 1400 ? 'rock-light' : height > 700 ? 'grass-dark' : 'grass');
+        baseContext.fillRect(column, row, 4, 4);
+      }
     }
   }
   function drawMap() {
     mapContext.drawImage(mapBase, 0, 0);
     if (!flight.freeFlight) {
       mapContext.beginPath();
-      for (const [index, gate] of ROUTE.entries()) {
+      for (const [index, gate] of flight.route.entries()) {
         const point = mapPoint(gate);
         if (index === 0) mapContext.moveTo(point.x, point.y);
         else mapContext.lineTo(point.x, point.y);
@@ -261,7 +276,7 @@ function boot() {
       mapContext.stroke();
       mapContext.setLineDash([]);
       mapContext.globalAlpha = 1;
-      for (const [index, gate] of ROUTE.entries()) {
+      for (const [index, gate] of flight.route.entries()) {
         const point = mapPoint(gate);
         mapContext.beginPath();
         mapContext.arc(point.x, point.y, index === flight.gateIndex ? 5 : 3, 0, Math.PI * 2);
@@ -295,7 +310,7 @@ function boot() {
     element('vertical-speed').textContent = `V/S ${verticalSpeed >= 0 ? '+' : ''}${verticalSpeed} m/s`;
     element('throttle').textContent = Math.round(flight.throttle * 100);
     element('throttle-fill').style.width = `${flight.throttle * 100}%`;
-    element('engine-status').textContent = flight.boosting ? 'AFTERBURNER' : flight.throttle < 0.15 ? 'IDLE' : 'MIL POWER';
+    element('engine-status').textContent = flight.boosting ? 'AFTERBURNER' : flight.throttle < 0.15 ? 'IDLE' : selectedAircraft.supportsAfterburner ? 'MIL POWER' : 'CRUISE POWER';
     const heading = ((-flight.heading * 180 / Math.PI) % 360 + 360) % 360;
     element('heading').textContent = (Math.round(heading) % 360).toString().padStart(3, '0');
     element('cardinal').textContent = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(heading / 45) % 8];
@@ -307,11 +322,11 @@ function boot() {
     element('compass-ticks').style.transform = `translateX(${-207 - (heading - centerTick) / 30 * 46}px)`;
     element('elapsed').textContent = timeString(flight.elapsed);
     element('flight-status').textContent = flight.crashed ? 'FLIGHT ENDED' : flight.completed ? 'COMPLETE' : flight.paused ? 'PAUSED' : 'IN FLIGHT';
-    element('best-score').textContent = bestScore ? `PERSONAL BEST / ${bestScore.toLocaleString()} PTS` : `FUJI CIRCUIT / ${flight.score.toLocaleString()} PTS`;
-    const gate = ROUTE[Math.min(flight.gateIndex, 7)];
+    element('best-score').textContent = bestScore ? `PERSONAL BEST / ${bestScore.toLocaleString()} PTS` : `CIRCUIT / ${flight.score.toLocaleString()} PTS`;
+    const gate = flight.route[Math.min(flight.gateIndex, 7)];
     const distance = Math.hypot(gate.x - flight.body.position.x, gate.y - flight.body.position.y, gate.z - flight.body.position.z);
     element('gate-count').textContent = `${String(Math.min(flight.gateIndex + 1, 8)).padStart(2, '0')} / 08`;
-    element('route-name').textContent = flight.freeFlight ? 'Fuji Five Lakes' : gate.name;
+    element('route-name').textContent = flight.freeFlight ? selectedScene.name : gate.name;
     element('route-detail').textContent = flight.freeFlight ? `${timeString(flight.elapsed)} / ${Math.round(flight.clearance).toLocaleString()} m AGL` : `${(distance / 1000).toFixed(1)} km / ${gate.y.toLocaleString()} m ASL`;
     for (const [index, bar] of [...element('route-progress').children].entries()) bar.className = index < flight.gateIndex ? 'done' : index === flight.gateIndex ? 'active' : '';
     element('gate-distance').textContent = `${(distance / 1000).toFixed(1)} km`;
@@ -329,7 +344,7 @@ function boot() {
     element('landmark').hidden = projected.z > 1 || landmarkX < (innerWidth < 700 ? 190 : 255) || landmarkX > innerWidth - 140 || landmarkY < 110 || landmarkY > innerHeight - 180;
     element('landmark').style.left = `${landmarkX}px`;
     element('landmark').style.top = `${landmarkY}px`;
-    const gate = ROUTE[Math.min(flight.gateIndex, 7)];
+    const gate = flight.route[Math.min(flight.gateIndex, 7)];
     projected.set(gate.x, gate.y, gate.z).project(camera);
     const visible = projected.z < 1 && Math.abs(projected.x) < 0.85 && Math.abs(projected.y) < 0.7;
     element('gate-label').hidden = !visible || flight.freeFlight || flight.completed;
@@ -384,7 +399,7 @@ function boot() {
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     if (cameraMode === 'cockpit') { camera.fov = clamp(camera.fov + event.deltaY * 0.025, 38, 90); camera.updateProjectionMatrix(); }
-    else view.distance = clamp(view.distance * Math.exp(event.deltaY * 0.001), 27, 240);
+    else view.distance = clamp(view.distance * Math.exp(event.deltaY * 0.001), selectedAircraft.cameraDistance * 0.6, selectedAircraft.cameraDistance * 5);
   }, { passive: false });
   const stick = element('stick');
   let stickPointer = null;
@@ -433,21 +448,96 @@ function boot() {
   element('sound-setting').onchange = (event) => setAudio(event.target.checked);
   element('throttle-setting').oninput = (event) => { flight.throttle = Number(event.target.value) / 100; element('throttle-output').value = `${event.target.value}%`; updateHUD(); };
   element('sensitivity').oninput = (event) => { sensitivity = Number(event.target.value); element('sensitivity-output').value = `${sensitivity.toFixed(1)}x`; };
+  element('invert-setting').onchange = (event) => {
+    invertY = event.target.checked;
+    element('pitch-help').textContent = invertY
+      ? 'W / ↑ or stick forward: nose down. S / ↓ or pull back: nose up.'
+      : 'W / ↑ or stick forward: nose up. S / ↓ or pull back: nose down.';
+  };
+  for (const [id, options] of [['aircraft-setting', AIRCRAFT], ['scene-setting', SCENES]]) {
+    for (const option of options) element(id).add(new Option(option.name, option.id));
+  }
+  function updateSelectionLabels() {
+    canvas.setAttribute('aria-label', `3D flight over ${selectedScene.name}`);
+    element('aircraft-label').textContent = selectedAircraft.name;
+    element('scene-label').textContent = selectedScene.name.toUpperCase();
+    element('photo-label').textContent = `${selectedScene.name.toUpperCase()} / PHOTO`;
+    element('selection-label').textContent = `${selectedAircraft.name} / ${selectedScene.name}`;
+    element('location-name').textContent = `${selectedScene.name}, Japan`;
+    element('location-coordinates').textContent = `${selectedScene.latitude.toFixed(4)}° N  ${selectedScene.longitude.toFixed(4)}° E`;
+    element('landmark').querySelector('strong').textContent = selectedScene.landmark.name.toUpperCase();
+    element('landmark').querySelector('small').textContent = `${selectedScene.landmark.height.toLocaleString()} M / JAPAN`;
+    const { x, z, altitude } = selectedScene.landmark;
+    landmarkPosition.set(x, altitude, z);
+    element('touch-boost').disabled = !selectedAircraft.supportsAfterburner;
+    element('touch-boost').title = selectedAircraft.supportsAfterburner ? 'Afterburner' : 'No afterburner on the 787';
+  }
+  element('aircraft-setting').onchange = (event) => {
+    const next = AIRCRAFT.find((option) => option.id === event.target.value);
+    if (!next || next === selectedAircraft) return;
+    const replacement = createJet(palette, next.id);
+    world.scene.remove(aircraft.jet);
+    disposeAircraft(aircraft);
+    aircraft = replacement;
+    selectedAircraft = next;
+    world.scene.add(aircraft.jet);
+    clearInput();
+    flight.boosting = false;
+    setCamera(cameraMode);
+    updateSelectionLabels();
+    updateHUD();
+  };
+  element('scene-setting').onchange = (event) => {
+    const next = getScene(event.target.value);
+    if (next.id === selectedScene.id) return;
+    const replacement = createWorld(palette, next.id);
+    world.scene.remove(aircraft.jet);
+    world.dispose();
+    world = replacement;
+    selectedScene = next;
+    world.scene.add(aircraft.jet);
+    const freeFlight = flight.freeFlight;
+    flight.setScene(next.id);
+    loadBestScore();
+    rebuildMap();
+    updateSelectionLabels();
+    restart(freeFlight);
+    if (settingsWasPaused) pause(true);
+    // The settings dialog remains modal while the new flight is prepared.
+    flight.paused = true;
+    element('throttle-setting').value = Math.round(flight.throttle * 100);
+    element('throttle-output').value = `${Math.round(flight.throttle * 100)}%`;
+    applyLighting();
+  };
   element('camera-options').onclick = (event) => { const button = event.target.closest('[data-camera]'); if (button) setCamera(button.dataset.camera); };
   element('quality-setting').onchange = (event) => {
     const ratios = { low: 1, balanced: 1.6, high: 2.2 };
     renderer.setPixelRatio(Math.min(devicePixelRatio, ratios[event.target.value])); renderer.setSize(innerWidth, innerHeight);
   };
-  element('light-setting').onchange = (event) => {
-    const setting = event.target.value;
+  function applyLighting() {
+    const now = new Date();
+    lightMinute = Math.floor(now.getTime() / 60000);
+    dayPeriod = element('day-setting').value === 'auto'
+      ? localDayPeriod(now, selectedScene.latitude, selectedScene.longitude) : element('day-setting').value;
+    const night = dayPeriod === 'night';
+    const setting = element('light-setting').value;
     const warm = setting === 'golden';
-    world.sky.material.uniforms.zenith.value.set(palette('sky-top')).lerp(new THREE.Color(palette('sky-horizon')), warm ? 0.24 : 0);
-    world.sky.material.uniforms.horizon.value.set(palette(warm ? 'blossom-light' : setting === 'noon' ? 'snow-shadow' : 'sky-horizon'));
+    world.sky.material.uniforms.zenith.value.set(palette(night ? 'night-top' : 'sky-top')).lerp(new THREE.Color(palette('sky-horizon')), !night && warm ? 0.24 : 0);
+    world.sky.material.uniforms.horizon.value.set(palette(night ? 'night-horizon' : warm ? 'blossom-light' : setting === 'noon' ? 'snow-shadow' : 'sky-horizon'));
+    world.sky.material.uniforms.daylight.value = night ? 0 : 1;
     world.scene.fog.color.copy(world.sky.material.uniforms.horizon.value);
-    world.sun.color.set(palette(warm ? 'sky-horizon' : 'sun'));
-    world.sun.intensity = warm ? 3.6 : setting === 'noon' ? 3.5 : 3.1;
-    renderer.toneMappingExposure = warm ? 1.1 : 1.03;
-  };
+    world.sun.color.set(palette(night ? 'moon' : warm ? 'sky-horizon' : 'sun'));
+    world.sky.material.uniforms.sunlight.value.copy(world.sun.color);
+    world.sun.intensity = night ? 0.35 : warm ? 3.6 : setting === 'noon' ? 3.5 : 3.1;
+    world.hemisphere.intensity = night ? 0.65 : 1.85;
+    world.hemisphere.color.set(palette(night ? 'night-horizon' : 'snow'));
+    world.stars.visible = world.moon.visible = night;
+    element('light-setting').disabled = night;
+    renderer.toneMappingExposure = night ? 0.85 : warm ? 1.1 : 1.03;
+    element('local-time').textContent = `${now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit' })} JST / ${dayPeriod.toUpperCase()}`;
+  }
+  element('light-setting').onchange = applyLighting;
+  element('day-setting').onchange = applyLighting;
   element('fullscreen-button').onclick = async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
@@ -483,7 +573,7 @@ function boot() {
     forward.set(0, 0, -1).applyQuaternion(aircraft.jet.quaternion);
     camera.position.add(jetPosition).sub(previousPosition);
     if (cameraMode === 'cockpit') {
-      cameraOffset.set(0, 2.7, -5).applyQuaternion(aircraft.jet.quaternion);
+      cameraOffset.set(...selectedAircraft.cockpitOffset).applyQuaternion(aircraft.jet.quaternion);
       camera.position.copy(jetPosition).add(cameraOffset);
       const lookRotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(-view.elevation + 0.25, -view.azimuth + (innerWidth < 700 ? 0 : 0.05), 0, 'YXZ'));
       cameraTarget.set(0, 0, -100).applyQuaternion(lookRotation).applyQuaternion(aircraft.jet.quaternion).add(camera.position);
@@ -504,11 +594,11 @@ function boot() {
     requestAnimationFrame(frame);
     const delta = Math.min(clock.getDelta(), 0.05);
     const manual = {
-      pitch: ((keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) + touch.pitch) * sensitivity,
+      pitch: pitchInput(keys, touch.pitch, sensitivity, invertY),
       roll: ((keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0) - (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) + touch.roll) * sensitivity,
       yaw: ((keys.has('KeyQ') ? 1 : 0) - (keys.has('KeyE') ? 1 : 0)) * sensitivity,
       throttle: (keys.has('Equal') || keys.has('BracketRight') ? 1 : 0) - (keys.has('Minus') || keys.has('BracketLeft') ? 1 : 0) + touch.throttle,
-      boost: keys.has('ShiftLeft') || keys.has('ShiftRight') || touch.boost,
+      boost: selectedAircraft.supportsAfterburner && (keys.has('ShiftLeft') || keys.has('ShiftRight') || touch.boost),
     };
     flight.update(delta, autoPilot ? { ...manual, ...autopilotInput(flight) } : manual);
     if (flight.event === 'gate') { notify(`Checkpoint ${String(flight.gateIndex).padStart(2, '0')} / +${(1000 + Math.round(flight.speed)).toLocaleString()} points`); chime(); }
@@ -516,16 +606,19 @@ function boot() {
     jetPosition.copy(flight.body.position);
     aircraft.jet.position.copy(jetPosition); aircraft.jet.quaternion.copy(flight.body.quaternion);
     aircraft.jet.visible = cameraMode !== 'cockpit';
-    aircraft.flame.scale.set(1, (flight.boosting ? 1.9 : 0.42) * (0.94 + Math.sin(flight.elapsed * 43) * 0.06), 1);
-    aircraft.flame.material.opacity = flight.boosting ? 0.72 : 0.2;
-    aircraft.exhaustDisk.material.color.set(palette(flight.boosting ? 'sun' : 'exhaust'));
+    if (selectedAircraft.supportsAfterburner) {
+      aircraft.flame.scale.set(1, 1, (flight.boosting ? 1.9 : 0.42) * (0.94 + Math.sin(flight.elapsed * 43) * 0.06));
+      aircraft.flame.material.opacity = flight.boosting ? 0.72 : 0.2;
+      aircraft.exhaustDisk.material.color.set(palette(flight.boosting ? 'sun' : 'exhaust'));
+    }
     for (const [index, gate] of world.gates.entries()) {
       gate.visible = !flight.freeFlight && index >= flight.gateIndex && index <= flight.gateIndex + 1;
       gate.children[0].material.emissiveIntensity = index === flight.gateIndex ? 0.36 + Math.sin(flight.elapsed * 2) * 0.1 : 0;
     }
     world.sky.position.copy(jetPosition);
-    world.glints.material.opacity = 0.4 + Math.sin(flight.elapsed * 0.6) * 0.1;
+    world.glints.material.opacity = (dayPeriod === 'night' ? 0.08 : 0.4) + Math.sin(flight.elapsed * 0.6) * 0.05;
     world.clouds.position.x = Math.sin(flight.elapsed * 0.004) * 300;
+    if (Math.floor(Date.now() / 60000) !== lightMinute) applyLighting();
     updateCamera(delta);
     renderer.render(world.scene, camera);
     if (!photoMode) placeLabels();
@@ -548,9 +641,11 @@ function boot() {
       paused: flight.paused, crashed: flight.crashed, completed: flight.completed, boosting: flight.boosting,
       camera: cameraMode, view: { ...view }, autopilot: autoPilot, photoMode, freeFlight: flight.freeFlight,
       audio: audioEnabled, terrainBlocks: world.terrain.count,
+      aircraft: selectedAircraft.id, scene: selectedScene.id, invertY, dayPeriod,
       triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
     })
   });
+  rebuildMap(); updateSelectionLabels(); applyLighting();
   setCamera('chase'); updateHUD(); element('loading').hidden = true; canvas.style.cursor = 'grab'; frame();
 }
 

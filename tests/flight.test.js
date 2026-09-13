@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlightModel, autopilotInput, crossedGate, ROUTE, GATE_NORMALS, groundHeight, terrainHeight } from '../src/flight.js';
+import * as THREE from 'three';
 
 test('cruise stays airborne and moves forward at finite speed', () => {
   const flight = new FlightModel();
@@ -50,6 +51,32 @@ test('first gate is credited once; free flight does not score gates', () => {
   flight.body.position.set(0, 1120, -196);
   flight.update(0.05);
   assert.equal(flight.gateIndex, 0);
+});
+test('square gate detection handles vertical, forward and reverse-facing gates', () => {
+  const gate = new THREE.Vector3(50, 1100, -200);
+  for (const normal of [new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 1, 0)]) {
+    const rotation = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+    const point = (x, y, z) => new THREE.Vector3(x, y, z).applyQuaternion(rotation).add(gate);
+    for (const direction of [-1, 1]) {
+      assert.equal(crossedGate(point(120, 120, direction * 300), point(120, 120, -direction * 300), gate, normal), true);
+      assert.equal(crossedGate(point(160, 0, direction * 300), point(160, 0, -direction * 300), gate, normal), false);
+    }
+    assert.equal(crossedGate(point(60, 60, 300), point(60, 60, -300), gate, normal, 50), false);
+    assert.equal(crossedGate(point(40, 40, 300), point(40, 40, -300), gate, normal, 50), true);
+  }
+});
+test('crossing a visible gate corner advances the circuit exactly once', () => {
+  const flight = new FlightModel();
+  const gate = flight.route[0];
+  const rotation = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3().copy(flight.gateNormals[0]));
+  flight.body.position.copy(new THREE.Vector3(120, 120, -2).applyQuaternion(rotation).add(new THREE.Vector3().copy(gate)));
+  flight.update(0.05);
+  assert.equal(flight.gateIndex, 1);
+  assert.equal(flight.event, 'gate');
+  const score = flight.score;
+  flight.update(0.05);
+  assert.equal(flight.gateIndex, 1);
+  assert.equal(flight.score, score);
 });
 test('all gates clear terrain and have unit normals', () => {
   for (const [index, gate] of ROUTE.entries()) {
