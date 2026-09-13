@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SCENES, getScene, FUJI, CELL, terrainHeight, groundHeight, lakeDistance, intersectsScenery } from '../src/scenes.js';
-import { FlightModel, autopilotInput, ROUTE, GATE_NORMALS, GATE_RADIUS } from '../src/flight.js';
+import { FlightModel, autopilotInput, crossedGate, ROUTE, GATE_NORMALS, GATE_RADIUS } from '../src/flight.js';
 import { createWorld } from '../src/world.js';
+import * as THREE from 'three';
 
 test('seven public-reference scenes expose the reusable selection contract', () => {
   assert.deepEqual(SCENES.map(({ id }) => id), ['fuji', 'kamakura', 'alps', 'kyoto', 'himeji', 'tokyo', 'yokohama']);
@@ -103,6 +104,29 @@ for (const scene of SCENES) {
     assert.equal(world.scene.children.length, 0);
     assert.equal(calls.size, resources.size);
     assert.ok([...calls.values()].every((count) => count === 1));
+  });
+
+  test(`${scene.name}: square gate scoring matches rendered corners and edges`, (t) => {
+    const world = createWorld(() => '#88aacc', scene.id);
+    t.after(() => world.dispose());
+    const flight = new FlightModel(scene.id);
+    for (const [index, gate] of world.gates.entries()) {
+      gate.updateMatrixWorld();
+      const point = (x, y, z) => gate.localToWorld(new THREE.Vector3(x, y, z));
+      const crossing = (x, y) => crossedGate(point(x, y, 300), point(x, y, -300), flight.route[index], flight.gateNormals[index]);
+      for (const x of [-120, 120]) for (const y of [-120, 120]) {
+        assert.equal(crossing(x, y), true, `${scene.name} gate ${index}: visible corner`);
+      }
+      const halfSize = GATE_RADIUS - 15;
+      for (const sign of [-1, 1]) {
+        assert.equal(crossing(sign * (halfSize - 0.01), 0), true);
+        assert.equal(crossing(0, sign * (halfSize - 0.01)), true);
+        assert.equal(crossing(sign * (halfSize + 0.01), 0), false);
+        assert.equal(crossing(0, sign * (halfSize + 0.01)), false);
+      }
+      assert.equal(crossedGate(point(0, 0, 300), point(0, 0, 200), flight.route[index], flight.gateNormals[index]), false);
+      assert.equal(crossedGate(point(-50, 0, 100), point(50, 0, 100), flight.route[index], flight.gateNormals[index]), false);
+    }
   });
 
   test(`${scene.name}: rendered landmark blocks share swept collision bounds`, () => {

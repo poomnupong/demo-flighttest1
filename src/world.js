@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GATE_RADIUS, routeNormals } from './flight.js';
+import { GATE_RADIUS, gateRotation, routeNormals } from './flight.js';
 import { CELL, EXTENT, getScene, terrainHeight as sampleTerrain, groundHeight as sampleGround, lakeDistance as sampleWater, clamp } from './scenes.js';
 
 export function disposeObject(object) {
@@ -185,7 +185,7 @@ export function createWorld(palette, sceneId = 'fuji') {
       group.add(vertical);
     }
     group.position.set(gate.x, gate.y, gate.z);
-    group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3().copy(gateNormals[index]));
+    group.quaternion.copy(gateRotation(gateNormals[index]));
     scene.add(group);
     return group;
   });

@@ -215,6 +215,9 @@ const routePoints = [
 ];
 export const SCENES = definitions.map((entry) => {
   const scene = { horizontalScale: 'Stylized, horizontally compressed landmark arrangement; not a navigation map.', ...entry };
+  const { x, z, height } = scene.landmark;
+  // Mountain heights are ASL; building heights are measured above the rendered ground.
+  scene.landmark = { ...scene.landmark, altitude: height + (['fuji', 'alps'].includes(scene.id) ? 0 : groundHeight(x, z, scene.id)) };
   scene.spawn = { x: 0, y: 1100, z: 1800 };
   scene.route = routePoints.map(([x, y, z, name], index) => ({
     x, z, y: scene.id === 'fuji' ? y : scene.id === 'alps' ? [1120, 1800, 3100, 3700, 3500, 2900, 1850, 1130][index] : [1120, 1100, 1050, 1200, 1200, 1100, 1050, 1130][index],

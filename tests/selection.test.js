@@ -5,10 +5,36 @@ import { runInNewContext } from 'node:vm';
 import * as THREE from 'three';
 import { createWorld } from '../src/world.js';
 import { localDayPeriod } from '../src/settings.js';
+import { SCENES, groundHeight } from '../src/scenes.js';
 
 const source = readFileSync(new URL('../src/game.js', import.meta.url), 'utf8');
 const sceneHandler = source.slice(source.indexOf("  element('scene-setting').onchange"), source.indexOf("  element('camera-options').onclick"));
 const lighting = source.slice(source.indexOf('  function applyLighting()'), source.indexOf("  element('fullscreen-button').onclick"));
+const selectionLabels = source.slice(source.indexOf('  function updateSelectionLabels()'), source.indexOf("  element('aircraft-setting').onchange"));
+
+test('every scene positions its landmark label at a finite world-space summit or rooftop', () => {
+  const element = () => ({ setAttribute() {}, querySelector: () => ({}) });
+  const landmarkPosition = new THREE.Vector3();
+  const camera = new THREE.PerspectiveCamera(56, 1, 0.15, 42000);
+  for (const selectedScene of SCENES) {
+    const context = {
+      element, canvas: element(), selectedScene, landmarkPosition,
+      selectedAircraft: { name: 'F-35A', supportsAfterburner: true },
+    };
+    runInNewContext(`${selectionLabels}\nupdateSelectionLabels();`, context);
+    const { x, z, height } = selectedScene.landmark;
+    const expectedAltitude = ['fuji', 'alps'].includes(selectedScene.id)
+      ? height : groundHeight(x, z, selectedScene.id) + height;
+    assert.deepEqual(landmarkPosition.toArray(), [x, expectedAltitude, z], selectedScene.name);
+    camera.position.set(x, expectedAltitude, z + 1000);
+    camera.lookAt(landmarkPosition);
+    camera.updateMatrixWorld();
+    const projected = landmarkPosition.clone().project(camera);
+    assert.ok(projected.toArray().every(Number.isFinite), selectedScene.name);
+    assert.ok(Math.abs(projected.x) < 1e-8 && Math.abs(projected.y) < 1e-8);
+    assert.ok(projected.z < 1);
+  }
+});
 
 test('scene selection disposes the old world, resets its flight, and remains paused in settings', () => {
   for (const freeFlight of [false, true]) {

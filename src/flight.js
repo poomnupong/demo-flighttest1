@@ -1,10 +1,12 @@
 import { Body, Sphere, Vec3, World } from 'cannon-es';
+import { Quaternion, Vector3 } from 'three';
 import { EXTENT, getScene, groundHeight, intersectsScenery, clamp, lerp } from './scenes.js';
 export { CELL, EXTENT, FUJI, terrainHeight, groundHeight, lakeDistance, clamp, lerp } from './scenes.js';
 
 export const ROUTE = getScene().route;
 export const GATE_RADIUS = 165;
-export function crossedGate(previous, current, gate, normal, radius = GATE_RADIUS - 15) {
+export const gateRotation = (normal) => new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), new Vector3(normal.x, normal.y, normal.z));
+export function crossedGate(previous, current, gate, normal, halfSize = GATE_RADIUS - 15) {
   const previousSide = (previous.x - gate.x) * normal.x + (previous.y - gate.y) * normal.y + (previous.z - gate.z) * normal.z;
   const currentSide = (current.x - gate.x) * normal.x + (current.y - gate.y) * normal.y + (current.z - gate.z) * normal.z;
   if (previousSide * currentSide > 0 || Math.abs(previousSide - currentSide) < 0.00001) return false;
@@ -12,7 +14,9 @@ export function crossedGate(previous, current, gate, normal, radius = GATE_RADIU
   const offsetX = lerp(previous.x, current.x, fraction) - gate.x;
   const offsetY = lerp(previous.y, current.y, fraction) - gate.y;
   const offsetZ = lerp(previous.z, current.z, fraction) - gate.z;
-  return Math.hypot(offsetX, offsetY, offsetZ) < radius;
+  // Use the rendered square's local axes, retaining clearance from its frame.
+  const local = new Vector3(offsetX, offsetY, offsetZ).applyQuaternion(gateRotation(normal).invert());
+  return Math.abs(local.x) < halfSize && Math.abs(local.y) < halfSize;
 }
 export const routeNormals = (route, spawn) => route.map((gate, index) => {
   const previous = index === 0 ? spawn : route[index - 1];
