@@ -39,6 +39,9 @@ test('catalog provides selectable aircraft, scaled cameras and afterburner capab
 test('quantize8bit clamps colors to a 256-color (3-3-2 bit) palette', () => {
   assert.equal(quantize8bit('#ffffff'), '#ffffff');
   assert.equal(quantize8bit('#000000'), '#000000');
+  // RGB332 levels on the encoded sRGB bytes: red/green in 8 steps, blue in 00/55/aa/ff.
+  assert.equal(quantize8bit('#8799a3'), '#9292aa');
+  assert.equal(quantize8bit('#365665'), '#244955');
   // Repeated quantization must be stable (idempotent) once a color is already on the palette.
   const once = quantize8bit('#8799a3');
   assert.equal(quantize8bit(once), once);
@@ -76,8 +79,11 @@ for (const [id, length, span] of [['f35', 15.7, 10.7], ['f22', 18.9, 13.6], ['b7
     });
     assert.equal(geometries.size, 1);
     assert.ok(instanceCount > drawCalls * 5);
-    const bodySize = bounds(jet.getObjectByName('fuselage')).getSize(new THREE.Vector3());
-    const wingSize = bounds(jet.getObjectByName('wings')).getSize(new THREE.Vector3());
+    // Measure local (pre-group-scale) geometry so the reference proportions stay comparable.
+    jet.updateMatrixWorld(true);
+    const scale = jet.scale.x;
+    const bodySize = bounds(jet.getObjectByName('fuselage')).getSize(new THREE.Vector3()).divideScalar(scale);
+    const wingSize = bounds(jet.getObjectByName('wings')).getSize(new THREE.Vector3()).divideScalar(scale);
     assert.ok(Math.abs(bodySize.z - length) < 0.001);
     assert.ok(Math.abs(wingSize.x - span) < 0.001);
     assert.ok(Math.abs(wingSize.x / bodySize.z - span / length) < 0.001);

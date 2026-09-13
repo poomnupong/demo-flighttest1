@@ -17,15 +17,17 @@ const QUANTIZE_RED_BITS = 3;
 const QUANTIZE_GREEN_BITS = 3;
 const QUANTIZE_BLUE_BITS = 2;
 export function quantize8bit(hex) {
-  const color = new THREE.Color(hex);
-  const levels = (value, bits) => {
+  // Quantize the encoded sRGB bytes (not the linear working-space channels) so the
+  // result really lands on the RGB332 levels, e.g. blue on 00/55/aa/ff.
+  const bytes = new THREE.Color(hex).getHexString();
+  const levels = (byte, bits) => {
     const steps = (1 << bits) - 1;
-    return Math.round(value * steps) / steps;
+    return Math.round((Math.round((byte * steps) / 255) * 255) / steps);
   };
-  color.r = levels(color.r, QUANTIZE_RED_BITS);
-  color.g = levels(color.g, QUANTIZE_GREEN_BITS);
-  color.b = levels(color.b, QUANTIZE_BLUE_BITS);
-  return `#${color.getHexString()}`;
+  const channel = (index, bits) =>
+    levels(Number.parseInt(bytes.slice(index * 2, index * 2 + 2), 16), bits)
+      .toString(16).padStart(2, '0');
+  return `#${channel(0, QUANTIZE_RED_BITS)}${channel(1, QUANTIZE_GREEN_BITS)}${channel(2, QUANTIZE_BLUE_BITS)}`;
 }
 
 export function createJet(palette, id = 'f35') {
