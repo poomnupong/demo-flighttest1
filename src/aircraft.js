@@ -11,17 +11,20 @@ export const AIRCRAFT = [
   { id: 'b787', name: 'Boeing 787-8 · Japan Airlines inspired', cameraDistance: 290, cockpitOffset: [0, 4.2, -48], supportsAfterburner: false },
 ];
 
-// 8-bit (256-color) palette quantization: 3 bits red, 3 bits green, 2 bits blue (RGB332),
+// 8-bit (256-color) palette quantization: RGB332 (3 red bits, 3 green bits, 2 blue bits),
 // giving the blocky aircraft a retro, limited-palette look.
+const QUANTIZE_RED_BITS = 3;
+const QUANTIZE_GREEN_BITS = 3;
+const QUANTIZE_BLUE_BITS = 2;
 export function quantize8bit(hex) {
   const color = new THREE.Color(hex);
   const levels = (value, bits) => {
     const steps = (1 << bits) - 1;
     return Math.round(value * steps) / steps;
   };
-  color.r = levels(color.r, 3);
-  color.g = levels(color.g, 3);
-  color.b = levels(color.b, 2);
+  color.r = levels(color.r, QUANTIZE_RED_BITS);
+  color.g = levels(color.g, QUANTIZE_GREEN_BITS);
+  color.b = levels(color.b, QUANTIZE_BLUE_BITS);
   return `#${color.getHexString()}`;
 }
 
