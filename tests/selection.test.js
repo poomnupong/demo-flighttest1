@@ -1,0 +1,83 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
+import * as THREE from 'three';
+import { localDayPeriod } from '../src/settings.js';
+
+const source = readFileSync(new URL('../src/game.js', import.meta.url), 'utf8');
+const sceneHandler = source.slice(source.indexOf("  element('scene-setting').onchange"), source.indexOf("  element('camera-options').onclick"));
+const lighting = source.slice(source.indexOf('  function applyLighting()'), source.indexOf("  element('fullscreen-button').onclick"));
+
+test('scene selection disposes the old world, resets its flight, and remains paused in settings', () => {
+  for (const freeFlight of [false, true]) {
+    const elements = new Map();
+    const element = (id) => {
+      if (!elements.has(id)) elements.set(id, {});
+      return elements.get(id);
+    };
+    const calls = [];
+    const nextWorld = { scene: { add: () => calls.push('attach') } };
+    const context = {
+      element, selectedScene: { id: 'fuji' }, aircraft: { jet: {} }, palette() {},
+      world: { scene: { remove: () => calls.push('detach') }, dispose: () => calls.push('dispose') },
+      getScene: (id) => ({ id }),
+      createWorld: () => nextWorld,
+      flight: { freeFlight, paused: true, throttle: 0.6, setScene: () => calls.push('reset') },
+      settingsWasPaused: false,
+      loadBestScore: () => calls.push('score'),
+      rebuildMap: () => calls.push('map'),
+      updateSelectionLabels: () => calls.push('labels'),
+      restart: (mode) => { assert.equal(mode, freeFlight); context.flight.paused = false; },
+      applyLighting: () => calls.push('lighting'),
+    };
+    runInNewContext(sceneHandler, context);
+    element('scene-setting').onchange({ target: { value: 'tokyo' } });
+    assert.equal(context.selectedScene.id, 'tokyo');
+    assert.equal(context.world, nextWorld);
+    assert.equal(context.flight.paused, true);
+    assert.deepEqual(calls, ['detach', 'dispose', 'attach', 'reset', 'score', 'map', 'labels', 'lighting']);
+    element('scene-setting').onchange({ target: { value: 'tokyo' } });
+    assert.equal(calls.length, 8, 'reselecting the active scene is a no-op');
+  }
+});
+
+test('lighting changes sky, sun, ambient light, stars and moon without restarting flight', () => {
+  const elements = new Map();
+  const element = (id) => {
+    if (!elements.has(id)) elements.set(id, { value: id === 'day-setting' ? 'night' : 'morning' });
+    return elements.get(id);
+  };
+  const colors = {
+    'night-top': '#101831', 'night-horizon': '#394273', 'sky-top': '#528ec6',
+    'sky-horizon': '#f5d9b0', snow: '#ffffff', moon: '#d6e7ff', sun: '#fff2cf',
+  };
+  const context = {
+    THREE, element, palette: (name) => colors[name], localDayPeriod,
+    selectedScene: { latitude: 35.36, longitude: 138.73 }, lightMinute: -1, dayPeriod: 'day',
+    world: {
+      sky: { material: { uniforms: { zenith: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, daylight: { value: 1 } } } },
+      scene: { fog: { color: new THREE.Color() } },
+      sun: { color: new THREE.Color(), intensity: 3.1 },
+      hemisphere: { color: new THREE.Color(), intensity: 1.85 },
+      stars: { visible: false }, moon: { visible: false },
+    },
+    renderer: {},
+  };
+  runInNewContext(lighting, context);
+  element('day-setting').onchange();
+  assert.equal(context.dayPeriod, 'night');
+  assert.equal(context.world.sky.material.uniforms.daylight.value, 0);
+  assert.equal(context.world.stars.visible, true);
+  assert.equal(context.world.moon.visible, true);
+  assert.equal(element('light-setting').disabled, true);
+  assert.equal(context.world.sun.intensity, 0.35);
+  element('day-setting').value = 'day';
+  element('day-setting').onchange();
+  assert.equal(context.dayPeriod, 'day');
+  assert.equal(context.world.sky.material.uniforms.daylight.value, 1);
+  assert.equal(context.world.stars.visible, false);
+  assert.equal(context.world.moon.visible, false);
+  assert.equal(context.world.hemisphere.intensity, 1.85);
+  assert.equal(element('light-setting').disabled, false);
+});

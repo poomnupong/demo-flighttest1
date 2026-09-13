@@ -1,14 +1,35 @@
 import * as THREE from 'three';
-import { CELL, EXTENT, FUJI, ROUTE, GATE_NORMALS, GATE_RADIUS, terrainHeight, groundHeight, lakeDistance, clamp } from './flight.js';
+import { GATE_RADIUS, routeNormals } from './flight.js';
+import { CELL, EXTENT, getScene, terrainHeight as sampleTerrain, groundHeight as sampleGround, lakeDistance as sampleWater, clamp } from './scenes.js';
 
-export function createWorld(palette) {
+export function disposeObject(object) {
+  const resources = new Set();
+  object.traverse((child) => {
+    if (child.geometry) resources.add(child.geometry);
+    for (const material of Array.isArray(child.material) ? child.material : child.material ? [child.material] : []) {
+      resources.add(material);
+      for (const value of Object.values(material)) if (value?.isTexture) resources.add(value);
+    }
+    if (child.isInstancedMesh) resources.add(child);
+  });
+  for (const resource of resources) resource.dispose();
+}
+
+export function createWorld(palette, sceneId = 'fuji') {
+  const descriptor = getScene(sceneId);
+  const terrainHeight = (x, z) => sampleTerrain(x, z, sceneId);
+  const groundHeight = (x, z) => sampleGround(x, z, sceneId);
+  const lakeDistance = (x, z) => sampleWater(x, z, sceneId);
+  const gateNormals = routeNormals(descriptor.route, descriptor.spawn);
   const tint = (name) => new THREE.Color(palette(name));
   const scene = new THREE.Scene();
+  scene.name = descriptor.name;
   scene.fog = new THREE.Fog(palette('sky-horizon'), 6200, 20500);
   const sun = new THREE.DirectionalLight(palette('sun'), 3.1);
   sun.position.set(-6500, 7500, 2500);
-  scene.add(sun, new THREE.HemisphereLight(palette('snow'), palette('rock'), 1.85));
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(32000, 32, 20), new THREE.ShaderMaterial({
+  const hemisphere = new THREE.HemisphereLight(palette('snow'), palette('rock'), 1.85);
+  scene.add(sun, hemisphere);
+  const sky = new THREE.Mesh(new THREE.BoxGeometry(64000, 64000, 64000), new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     toneMapped: false,
@@ -68,7 +89,7 @@ export function createWorld(palette) {
   for (let worldX = -EXTENT + CELL / 2; worldX < EXTENT; worldX += CELL) {
     for (let worldZ = -EXTENT + CELL / 2; worldZ < EXTENT; worldZ += CELL) {
       const height = terrainHeight(worldX, worldZ);
-      const angle = Math.atan2(worldZ - FUJI.z, worldX - FUJI.x);
+      const angle = Math.atan2(worldZ - descriptor.landmark.z, worldX - descriptor.landmark.x);
       const snowline = 2200 + Math.sin(angle * 8) * 170 + Math.sin(angle * 15) * 70;
       const variation = random();
       let shade;
@@ -82,18 +103,17 @@ export function createWorld(palette) {
   }
   const terrain = blockBatch(groundBlocks);
   terrain.name = 'Voxel terrain';
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(EXTENT * 2, EXTENT * 2), new THREE.MeshStandardMaterial({
+  const water = new THREE.Mesh(new THREE.BoxGeometry(EXTENT * 2, 2, EXTENT * 2), new THREE.MeshStandardMaterial({
     color: palette('water'), roughness: 0.35, metalness: 0.25,
   }));
-  water.rotation.x = -Math.PI / 2;
-  water.position.y = 38;
+  water.position.y = 37;
   scene.add(water);
   const waterTiles = [];
   const sparkles = [];
   for (let tile = 0; tile < 680; tile++) {
-    const worldX = (random() - 0.5) * 5200;
-    const worldZ = (random() - 0.5) * 4300;
-    if (lakeDistance(worldX, worldZ) > 0.94) continue;
+    const worldX = (random() - 0.5) * EXTENT * 2;
+    const worldZ = (random() - 0.5) * EXTENT * 2;
+    if (groundHeight(worldX, worldZ) > 38) continue;
     waterTiles.push({ position: [worldX, 38.5 + random(), worldZ], size: [70 + random() * 220, 0.3, 50 + random() * 100], color: tint('water-deep').lerp(tint('water'), random()) });
     if (tile % 3 === 0) sparkles.push({ position: [worldX, 41, worldZ], size: [20 + random() * 65, 0.4, 2 + random() * 3], color: tint('water-glint') });
   }
@@ -105,7 +125,8 @@ export function createWorld(palette) {
     const worldX = (random() - 0.5) * 18400;
     const worldZ = (random() - 0.5) * 18400;
     const height = groundHeight(worldX, worldZ);
-    if (height < 78 || height > 1680 || lakeDistance(worldX, worldZ) < 1.10 || random() > 0.8) continue;
+    if (height < 78 || height > 1680 || lakeDistance(worldX, worldZ) < 1.10 || random() > 0.8
+      || descriptor.blocks.some(({ position: [x, , z], size: [w, , d] }) => Math.abs(worldX - x) < w / 2 + 45 && Math.abs(worldZ - z) < d / 2 + 45)) continue;
     const size = 22 + random() * 32;
     const shade = tint('pine').lerp(tint('pine-light'), random() * 0.8);
     trees.push({ position: [worldX, height + size * 0.48, worldZ], size: [size * 0.22, size, size * 0.22], color: bark });
@@ -113,47 +134,10 @@ export function createWorld(palette) {
       trees.push({ position: [worldX, height + size * (0.9 + level * 0.42), worldZ], size: [size * (1.12 - level * 0.3), size * 0.6, size * (1.12 - level * 0.3)], color: shade.clone().lerp(grassLight, level * 0.08) });
     }
   }
-  const village = [];
-  for (let houseIndex = 0; houseIndex < 125; houseIndex++) {
-    const angle = random() * Math.PI * 2;
-    const radius = 1.1 + random() * 0.18;
-    const worldX = 150 + Math.cos(angle) * 2520 * radius;
-    const worldZ = 50 + Math.sin(angle) * 2100 * radius;
-    const height = groundHeight(worldX, worldZ);
-    if (height > 350 || height < 50) continue;
-    const buildingHeight = 14 + random() * 14;
-    const turn = Math.round(angle / (Math.PI / 2)) * Math.PI / 2;
-    village.push({ position: [worldX, height + buildingHeight / 2, worldZ], size: [30, buildingHeight, 24], color: tint('wall'), rotation: turn });
-    village.push({ position: [worldX, height + buildingHeight + 2, worldZ], size: [38, 5, 32], color: tint('roof'), rotation: turn });
-    village.push({ position: [worldX, height + buildingHeight + 6, worldZ], size: [30, 5, 23], color: tint('roof').lerp(rockLight, 0.2), rotation: turn });
-    const cherryX = worldX + 28;
-    const cherryZ = worldZ + 12;
-    const cherryBase = groundHeight(cherryX, cherryZ);
-    trees.push({ position: [cherryX, cherryBase + 15, cherryZ], size: [5, 30, 5], color: bark });
-    trees.push({ position: [cherryX, cherryBase + 34, cherryZ], size: [38, 23, 33], color: tint('blossom') });
-    trees.push({ position: [cherryX - 9, cherryBase + 45, cherryZ - 5], size: [24, 15, 25], color: tint('blossom-light') });
-  }
   blockBatch(trees);
-  blockBatch(village);
-  const shrine = [];
-  const shrineX = -2570;
-  const shrineZ = 450;
-  const shrineBase = groundHeight(shrineX, shrineZ);
-  for (let level = 0; level < 5; level++) {
-    const width = 80 - level * 10;
-    shrine.push({ position: [shrineX, shrineBase + 15 + level * 26, shrineZ], size: [width - 16, 24, width - 16], color: tint('wall') });
-    shrine.push({ position: [shrineX, shrineBase + 29 + level * 26, shrineZ], size: [width + 15, 6, width + 15], color: tint('roof') });
-    shrine.push({ position: [shrineX, shrineBase + 35 + level * 26, shrineZ], size: [width, 6, width], color: tint('roof') });
-  }
-  shrine.push({ position: [shrineX, shrineBase + 165, shrineZ], size: [4, 43, 4], color: tint('glass-light') });
-  const toriiX = -2180;
-  const toriiZ = 470;
-  for (const side of [-1, 1]) shrine.push({ position: [toriiX + side * 28, 64, toriiZ], size: [9, 70, 10], color: tint('torii') });
-  shrine.push({ position: [toriiX, 99, toriiZ], size: [94, 9, 16], color: tint('torii') });
-  shrine.push({ position: [toriiX, 105, toriiZ], size: [105, 5, 18], color: tint('roof') });
-  shrine.push({ position: [toriiX, 85, toriiZ], size: [73, 6, 10], color: tint('torii') });
-  shrine.push({ position: [toriiX - 140, 43, toriiZ], size: [330, 6, 25], color: bark });
-  blockBatch(shrine);
+  const landmarks = blockBatch(descriptor.blocks.map((block) => ({ ...block, color: tint(block.color) })));
+  landmarks.name = `${descriptor.name} architecture`;
+  landmarks.userData.blocks = descriptor.blocks;
   const clouds = new THREE.Group();
   const cloudMaterial = new THREE.MeshStandardMaterial({ color: palette('snow'), roughness: 1, flatShading: true });
   for (let cloudIndex = 0; cloudIndex < 37; cloudIndex++) {
@@ -172,24 +156,47 @@ export function createWorld(palette) {
     clouds.add(cloud);
   }
   scene.add(clouds);
-  const gates = ROUTE.map((gate, index) => {
+  const stars = blockBatch(Array.from({ length: 350 }, () => {
+    const angle = random() * Math.PI * 2, elevation = 0.1 + random() * 1.35;
+    const radius = 24500, size = 16 + random() * 28;
+    return { position: [Math.cos(angle) * Math.cos(elevation) * radius, Math.sin(elevation) * radius, Math.sin(angle) * Math.cos(elevation) * radius],
+      size: [size, size, size], color: tint('snow') };
+  }), new THREE.MeshBasicMaterial({ transparent: true, opacity: 1, depthWrite: false, toneMapped: false }));
+  stars.name = 'Box stars';
+  stars.visible = false;
+  const moon = new THREE.Mesh(cube, new THREE.MeshBasicMaterial({ color: palette('snow'), toneMapped: false }));
+  moon.scale.set(580, 580, 180);
+  moon.position.set(8500, 14500, -16000);
+  moon.name = 'Box moon';
+  moon.visible = false;
+  scene.add(moon);
+  const gates = descriptor.route.map((gate, index) => {
     const group = new THREE.Group();
     const material = new THREE.MeshStandardMaterial({ color: palette('gate'), emissive: palette('gate'), emissiveIntensity: 0.28, roughness: 0.65 });
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(GATE_RADIUS, 6, 4, 48), material);
-    group.add(ring);
-    for (let segment = 0; segment < 12; segment++) {
-      const angle = segment / 12 * Math.PI * 2;
-      const marker = new THREE.Mesh(new THREE.BoxGeometry(13, 25, 13), material);
-      marker.position.set(Math.cos(angle) * GATE_RADIUS, Math.sin(angle) * GATE_RADIUS, 0);
-      marker.rotation.z = angle;
-      group.add(marker);
+    for (const side of [-1, 1]) {
+      const horizontal = new THREE.Mesh(cube, material);
+      horizontal.scale.set(GATE_RADIUS * 2 + 12, 12, 12);
+      horizontal.position.y = side * GATE_RADIUS;
+      group.add(horizontal);
+      const vertical = new THREE.Mesh(cube, material);
+      vertical.scale.set(12, GATE_RADIUS * 2 - 12, 12);
+      vertical.position.x = side * GATE_RADIUS;
+      group.add(vertical);
     }
     group.position.set(gate.x, gate.y, gate.z);
-    group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3().copy(GATE_NORMALS[index]));
+    group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3().copy(gateNormals[index]));
     scene.add(group);
     return group;
   });
-  return { scene, sky, sun, terrain, water, glints, clouds, gates };
+  let disposed = false;
+  return { scene, sky, sun, hemisphere, terrain, water, glints, clouds, gates, stars, moon, landmarks,
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      disposeObject(scene);
+      scene.clear();
+    },
+  };
 }
 
 export function createJet(palette) {

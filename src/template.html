@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f7f4ef">
-  <title>Fuji Flight | Alpine Circuit</title>
+  <title>Fuji Flight | Japan Circuits</title>
   <script>
     (() => {
       const param = new URLSearchParams(window.location.search).get("scoutTheme");
@@ -70,7 +70,7 @@
     }
 
     :root {
-      --cp-sky-top: #6cabbf;
+      --cp-sky-top: #528ec6;
       --cp-sky-horizon: #f5d9b0;
       --cp-sun: #fff2cf;
       --cp-snow: #f4f2e8;
@@ -78,19 +78,19 @@
       --cp-rock: #667b84;
       --cp-rock-light: #939e9d;
       --cp-grass-dark: #2d7164;
-      --cp-grass: #559975;
-      --cp-grass-light: #b8c983;
-      --cp-water: #61b9bf;
+      --cp-grass: #52a573;
+      --cp-grass-light: #bdde73;
+      --cp-water: #52c6ce;
       --cp-water-deep: #398f9f;
       --cp-water-glint: #c5e4d4;
       --cp-pine: #2b6860;
       --cp-pine-light: #6b9e72;
       --cp-bark: #706556;
-      --cp-blossom: #eaa7af;
+      --cp-blossom: #ef94bd;
       --cp-blossom-light: #f5cdc0;
       --cp-roof: #4d7076;
       --cp-wall: #ece2c8;
-      --cp-torii: #c76655;
+      --cp-torii: #de524a;
       --cp-jet: #b8c7c9;
       --cp-jet-light: #e5ece7;
       --cp-jet-dark: #637d86;
@@ -100,6 +100,10 @@
       --cp-ink-light: #ffffff;
       --cp-ink-dark: #234a4e;
       --cp-gate: #f8e6ad;
+      --cp-star: #fff7ce;
+      --cp-moon: #d6e7ff;
+      --cp-night-top: #101831;
+      --cp-night-horizon: #394273;
     }
 
     * {
@@ -926,6 +930,17 @@
       flex: 1;
     }
 
+    .setting-inline select {
+      max-width: 65%;
+      min-width: 0;
+    }
+
+    .setting-note {
+      color: var(--cp-text-muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
     .dialog-footer {
       display: flex;
       justify-content: space-between;
@@ -937,6 +952,9 @@
     .dialog-footer .mono {
       font-size: 10px;
       color: var(--cp-text-muted);
+      min-width: 0;
+      overflow-wrap: anywhere;
+      padding-right: 10px;
     }
 
     #photo-bar {
@@ -1340,7 +1358,7 @@
 </head>
 
 <body>
-  <canvas id="world" aria-label="3D flight over Mount Fuji"></canvas>
+  <canvas id="world" aria-label="3D flight over Japan"></canvas>
   <div id="loading">
     <h1>Fuji Flight</h1>
     <p>Preparing the mountain air...</p>
@@ -1351,7 +1369,7 @@
       <div class="brand"><i data-lucide="mountain"></i>
         <div>
           <div class="brand-name">FUJI <span>/ FLIGHT</span></div>
-          <div class="eyebrow">Alpine circuit &nbsp; / &nbsp; Flight no. 035</div>
+          <div class="eyebrow">Japan circuits &nbsp; / &nbsp; Block flight</div>
         </div>
       </div>
       <nav class="toolbar" aria-label="Flight tools">
@@ -1365,12 +1383,12 @@
         <button id="pause-button" class="icon-button" title="Pause flight (P)" aria-label="Pause flight"><i
             data-lucide="pause"></i></button>
         <button id="settings-button" class="icon-button" title="Flight settings" aria-label="Flight settings"><i
-            data-lucide="sliders-horizontal"></i></button>
+            data-lucide="settings"></i></button>
       </nav>
     </header>
     <div class="location">
-      <div class="eyebrow">Yamanashi Prefecture, Japan</div>
-      <div class="mono">35.3606&deg; N &nbsp; 138.7274&deg; E</div>
+      <div class="eyebrow" id="location-name">Mount Fuji, Japan</div>
+      <div class="mono" id="location-coordinates">35.3606&deg; N &nbsp; 138.7274&deg; E</div>
     </div>
     <section class="route" aria-label="Route progress">
       <div class="mode-switch" aria-label="Flight mode"><button id="circuit-mode"
@@ -1423,10 +1441,10 @@
       <aside class="navigation" aria-label="Navigation map">
         <div class="map-header"><span class="eyebrow">Flight plan</span><span id="elapsed" class="mono">00:00</span>
         </div><canvas id="minimap" width="332" height="274" aria-label="Course map and aircraft position"></canvas>
-        <div class="map-footer mono"><span>FUJI FIVE LAKES</span><span>N &uarr;</span></div>
+        <div class="map-footer mono"><span id="scene-label">MOUNT FUJI</span><span>N &uarr;</span></div>
       </aside>
     </footer>
-    <div class="status-line mono"><span>F-35A INSPIRED &nbsp; / &nbsp; 035 &nbsp; / &nbsp; <span id="flight-status">IN
+    <div class="status-line mono"><span><span id="aircraft-label">F-35A</span> &nbsp; / &nbsp; <span id="flight-status">IN
           FLIGHT</span></span><span id="best-score">FUJI CIRCUIT &nbsp; / &nbsp; 8 WAYPOINTS</span></div>
     <div class="touch-controls">
       <div id="stick" role="application" aria-label="Flight stick: drag to bank and pitch" title="Bank and pitch"><span
@@ -1453,6 +1471,9 @@
       <h2 id="settings-title">Flight deck</h2><button id="close-settings" class="icon-button"
         aria-label="Close settings" title="Close settings"><i data-lucide="x"></i></button>
     </div>
+    <div class="setting-inline"><label for="aircraft-setting">Aircraft</label><select id="aircraft-setting"></select></div>
+    <div class="setting-inline"><label for="scene-setting">Scene</label><select id="scene-setting"></select></div>
+    <p class="setting-note">Changing scene restarts the current flight mode.</p>
     <div class="setting">
       <div class="setting-title">Camera</div>
       <div class="segmented" id="camera-options"><button data-camera="chase" aria-pressed="true">Chase</button><button
@@ -1466,9 +1487,18 @@
         value="1" step="0.1"></div>
     <div class="setting-inline"><label for="assist-setting">Route autopilot</label><input id="assist-setting"
         type="checkbox" checked></div>
+    <div class="setting-inline"><label for="invert-setting">Invert Y axis</label><input id="invert-setting"
+        type="checkbox" checked></div>
+    <p class="setting-note" id="pitch-help">W / ↑ or stick forward: nose down. S / ↓ or pull back: nose up.</p>
     <div class="setting-inline"><label for="sound-setting">Engine sound</label><input id="sound-setting"
         type="checkbox"></div>
-    <div class="setting-inline"><label for="light-setting">Light</label><select id="light-setting">
+    <div class="setting-inline"><label for="day-setting">Day / night</label><select id="day-setting">
+        <option value="auto">Automatic (local sun)</option>
+        <option value="day">Day</option>
+        <option value="night">Night</option>
+      </select></div>
+    <p class="setting-note" id="local-time" aria-live="polite"></p>
+    <div class="setting-inline"><label for="light-setting">Daylight style</label><select id="light-setting">
         <option value="morning">Alpine morning</option>
         <option value="golden">Golden hour</option>
         <option value="noon">Clear midday</option>
@@ -1478,7 +1508,7 @@
         <option value="high">High</option>
         <option value="low">Low</option>
       </select></div>
-    <div class="dialog-footer"><span class="mono">F-35A / FUJI 035</span>
+    <div class="dialog-footer"><span class="mono" id="selection-label">F-35A / MOUNT FUJI</span>
       <div class="toolbar"><button id="settings-photo" class="icon-button" title="Photo mode" aria-label="Photo mode"><i
             data-lucide="aperture"></i></button><button id="fullscreen-button" class="icon-button"
           title="Toggle fullscreen" aria-label="Toggle fullscreen"><i data-lucide="maximize"></i></button></div>
