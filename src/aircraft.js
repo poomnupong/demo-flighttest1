@@ -1,14 +1,29 @@
 import * as THREE from 'three';
 
-// Metre-scale length/span: USAF F-35A and F-22 fact sheets; JAL 787-8 aircraft guide.
+// Metre-scale length/span: USAF F-35A and F-22 fact sheets; JAL 787-8 aircraft guide,
+// doubled (x2) from the real-world reference figures to make the in-game aircraft larger.
 // https://www.af.mil/About-Us/Fact-Sheets/Display/Article/478441/f-35a-lightning-ii/
 // https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104506/f-22-raptor/
 // https://www.jal.co.jp/en/aircraft/conf/787.html
 export const AIRCRAFT = [
-  { id: 'f35', name: 'F-35A Lightning II', cameraDistance: 45, cockpitOffset: [0, 1.9, -4.2], supportsAfterburner: true },
-  { id: 'f22', name: 'F-22 Raptor', cameraDistance: 52, cockpitOffset: [0, 2, -5.2], supportsAfterburner: true },
-  { id: 'b787', name: 'Boeing 787-8 · Japan Airlines inspired', cameraDistance: 145, cockpitOffset: [0, 2.1, -24], supportsAfterburner: false },
+  { id: 'f35', name: 'F-35A Lightning II', cameraDistance: 90, cockpitOffset: [0, 3.8, -8.4], supportsAfterburner: true },
+  { id: 'f22', name: 'F-22 Raptor', cameraDistance: 104, cockpitOffset: [0, 4, -10.4], supportsAfterburner: true },
+  { id: 'b787', name: 'Boeing 787-8 · Japan Airlines inspired', cameraDistance: 290, cockpitOffset: [0, 4.2, -48], supportsAfterburner: false },
 ];
+
+// 8-bit (256-color) palette quantization: 3 bits red, 3 bits green, 2 bits blue (RGB332),
+// giving the blocky aircraft a retro, limited-palette look.
+export function quantize8bit(hex) {
+  const color = new THREE.Color(hex);
+  const levels = (value, bits) => {
+    const steps = (1 << bits) - 1;
+    return Math.round(value * steps) / steps;
+  };
+  color.r = levels(color.r, 3);
+  color.g = levels(color.g, 3);
+  color.b = levels(color.b, 2);
+  return `#${color.getHexString()}`;
+}
 
 export function createJet(palette, id = 'f35') {
   const definition = AIRCRAFT.find((aircraft) => aircraft.id === id) || AIRCRAFT[0];
@@ -16,23 +31,28 @@ export function createJet(palette, id = 'f35') {
   const raptor = definition.id === 'f22';
   const length = airliner ? 56.7 : raptor ? 18.9 : 15.7;
   const span = airliner ? 60.1 : raptor ? 13.6 : 10.7;
+  // The whole jet is built at reference scale below, then doubled in size (100% increase)
+  // via a uniform group scale so every part (fuselage, wings, engines, lights) grows together.
+  const SIZE_MULTIPLIER = 2;
   const jet = new THREE.Group();
   jet.name = definition.name;
   jet.userData.aircraftId = definition.id;
-  jet.userData.dimensions = { length, span };
+  jet.userData.dimensions = { length: length * SIZE_MULTIPLIER, span: span * SIZE_MULTIPLIER };
   const cube = new THREE.BoxGeometry(1, 1, 1);
   const paint = new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0.22 });
   const batches = new Map();
-  const body = airliner ? '#f8f7f2' : palette('jet');
-  const light = airliner ? '#d8dfe2' : palette('jet-light');
-  const dark = airliner ? '#263440' : palette('jet-dark');
-  const red = '#c8102e';
+  const body = quantize8bit(airliner ? '#f8f7f2' : palette('jet'));
+  const light = quantize8bit(airliner ? '#d8dfe2' : palette('jet-light'));
+  const dark = quantize8bit(airliner ? '#263440' : palette('jet-dark'));
+  const red = quantize8bit('#c8102e');
+  const green = quantize8bit('#63dba2');
   function box(part, position, size, color = body) {
     if (!batches.has(part)) batches.set(part, []);
     batches.get(part).push({ position, size, color });
   }
   function sweptWing(part, root, tip, leading, trailing, height, thickness, color, rise = 0) {
-    const steps = Math.ceil((tip - root) / (airliner ? 1.05 : 0.38));
+    // Wider block pitch vs. the original divisor keeps the wing built from fewer, larger blocks.
+    const steps = Math.ceil((tip - root) / (airliner ? 1.3 : 0.46));
     const width = (tip - root) / steps;
     for (const side of [-1, 1]) {
       for (let index = 0; index < steps; index++) {
@@ -72,7 +92,7 @@ export function createJet(palette, id = 'f35') {
   }
 
   if (airliner) {
-    fuselage([[0, 0.35], [0.06, 3.5], [0.15, 5.77], [0.83, 5.77], [0.92, 3.5], [1, 0.45]], 46, 1);
+    fuselage([[0, 0.35], [0.06, 3.5], [0.15, 5.77], [0.83, 5.77], [0.92, 3.5], [1, 0.45]], 36, 1);
     sweptWing('wings', 2.4, span / 2, (x) => -5 + x * 0.46, (x) => 6 + x * 0.11, -0.9, 0.46, light, 0.075);
     sweptWing('stabilizers', 1.2, 10, (x) => 18 + x * 0.47, (x) => 25 + x * 0.08, 1.1, 0.38, light, 0.055);
     fin(1, 0, 1.5, 15.5, 27.2, 11.7, red);
@@ -96,12 +116,12 @@ export function createJet(palette, id = 'f35') {
       }
       box('cockpit', [side * 1.08, 1.5, -25], [1.65, 0.5, 1.2], dark);
       box('navigation-lights', [side * (span / 2 - 0.15), 1.37, 8.5], [0.25, 0.12, 0.5],
-        side < 0 ? red : '#63dba2');
+        side < 0 ? red : green);
     }
   } else {
     fuselage([[0, 0.12], [0.12, 0.85], [0.32, raptor ? 2.8 : 2.25],
       [0.58, raptor ? 3.7 : 2.9], [0.82, raptor ? 3.25 : 2.5],
-      [1, raptor ? 2.8 : 1.3]], raptor ? 29 : 25, raptor ? 0.54 : 0.65);
+      [1, raptor ? 2.8 : 1.3]], raptor ? 22 : 19, raptor ? 0.54 : 0.65);
     const root = raptor ? 1.45 : 1.15;
     sweptWing('wings', root, span / 2, (x) => (raptor ? -3.5 : -2.6) + x * 1.02,
       (x) => (raptor ? 3.5 : 2.7) + x * 0.16, 0.12, 0.23, light);
@@ -113,20 +133,21 @@ export function createJet(palette, id = 'f35') {
       box('intakes', [side * (raptor ? 1.52 : 1.15), -0.13, raptor ? -3.6 : -2.6],
         [raptor ? 0.68 : 0.48, 0.85, 0.2], dark);
       box('navigation-lights', [side * (span / 2 - 0.12), 0.27, raptor ? 2.5 : 2],
-        [0.16, 0.1, 0.32], side < 0 ? red : '#63dba2');
+        [0.16, 0.1, 0.32], side < 0 ? red : green);
     }
     for (let step = 0; step < 6; step++) {
       const t = step / 5;
       box('cockpit', [0, 0.94 + Math.sin(t * Math.PI) * 0.25, -length * 0.32 + step * 0.43],
-        [0.55 + Math.sin(t * Math.PI) * 0.55, 0.75, 0.43], palette('glass'));
+        [0.55 + Math.sin(t * Math.PI) * 0.55, 0.75, 0.43], quantize8bit(palette('glass')));
     }
   }
 
   const engineXs = airliner ? [-9.3, 9.3] : raptor ? [-0.94, 0.94] : [0];
   jet.userData.engineCount = engineXs.length;
-  const exhaustMaterial = new THREE.MeshBasicMaterial({ color: palette('exhaust') });
+  const exhaustColor = quantize8bit(palette('exhaust'));
+  const exhaustMaterial = new THREE.MeshBasicMaterial({ color: exhaustColor });
   const flameMaterial = new THREE.MeshBasicMaterial({
-    color: palette('exhaust'), transparent: true, opacity: 0.38,
+    color: exhaustColor, transparent: true, opacity: 0.38,
     depthWrite: false, blending: THREE.AdditiveBlending,
   });
   const flame = new THREE.Group();
@@ -171,6 +192,7 @@ export function createJet(palette, id = 'f35') {
     jet.add(mesh);
   }
   jet.add(flame, exhaustDisk);
+  jet.scale.set(SIZE_MULTIPLIER, SIZE_MULTIPLIER, SIZE_MULTIPLIER);
   return { jet, flame, exhaustDisk, definition };
 }
 
