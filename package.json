@@ -1,0 +1,28 @@
+{
+  "name": "demo-flighttest1",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Fuji Flight: a mobile-friendly, offline-capable flight game built with GitHub Copilot.",
+  "homepage": "https://poomnupong.github.io/demo-flighttest1/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/poomnupong/demo-flighttest1.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node --check src/game.js && node --check src/world.js && node --check src/flight.js && node --check scripts/build.mjs",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "cannon-es": "0.20.0",
+    "lucide": "0.468.0",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
+  }
+}

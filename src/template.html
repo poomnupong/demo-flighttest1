@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f4ef">
+  <title>Fuji Flight | Alpine Circuit</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+
+    :root {
+      --cp-sky-top: #6cabbf;
+      --cp-sky-horizon: #f5d9b0;
+      --cp-sun: #fff2cf;
+      --cp-snow: #f4f2e8;
+      --cp-snow-shadow: #b6cdd0;
+      --cp-rock: #667b84;
+      --cp-rock-light: #939e9d;
+      --cp-grass-dark: #2d7164;
+      --cp-grass: #559975;
+      --cp-grass-light: #b8c983;
+      --cp-water: #61b9bf;
+      --cp-water-deep: #398f9f;
+      --cp-water-glint: #c5e4d4;
+      --cp-pine: #2b6860;
+      --cp-pine-light: #6b9e72;
+      --cp-bark: #706556;
+      --cp-blossom: #eaa7af;
+      --cp-blossom-light: #f5cdc0;
+      --cp-roof: #4d7076;
+      --cp-wall: #ece2c8;
+      --cp-torii: #c76655;
+      --cp-jet: #b8c7c9;
+      --cp-jet-light: #e5ece7;
+      --cp-jet-dark: #637d86;
+      --cp-glass: #294b58;
+      --cp-glass-light: #d2bc86;
+      --cp-exhaust: #a6d9ed;
+      --cp-ink-light: #ffffff;
+      --cp-ink-dark: #234a4e;
+      --cp-gate: #f8e6ad;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    #world {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      background: var(--cp-bg);
+      z-index: 20;
+      text-align: center;
+    }
+
+    #loading h1 {
+      font-size: 32px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    #loading p {
+      color: var(--cp-text-muted);
+    }
+
+    #loading[hidden] {
+      display: none;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--cp-accent);
+      outline-offset: 4px;
+    }
+
+    svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .mono {
+      font-family: Consolas, "Courier New", Courier, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .eyebrow {
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.6;
+      text-transform: uppercase;
+    }
+
+    #flight-ui {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      color: var(--cp-ink-dark);
+    }
+
+    #flight-ui button,
+    #flight-ui input {
+      pointer-events: auto;
+    }
+
+    .masthead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: absolute;
+      left: 36px;
+      right: 36px;
+      top: 28px;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand>svg {
+      width: 37px;
+      height: 37px;
+      stroke-width: 1.25;
+    }
+
+    .brand-name {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.05;
+      white-space: nowrap;
+    }
+
+    .brand-name span {
+      font-weight: 300;
+      opacity: 0.7;
+    }
+
+    .brand .eyebrow {
+      margin-top: 6px;
+      opacity: 0.72;
+      font-size: 9px;
+    }
+
+    .location {
+      position: absolute;
+      top: 29px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .location .mono {
+      font-size: 10px;
+      margin-top: 4px;
+      opacity: 0.68;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .icon-button {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid color-mix(in srgb, var(--cp-ink-dark) 15%, transparent);
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--cp-panel) 60%, transparent);
+      color: var(--cp-text);
+      transition: background 0.2s;
+    }
+
+    .icon-button:hover {
+      background: var(--cp-panel-strong);
+    }
+
+    .icon-button[aria-pressed="true"] {
+      color: var(--cp-accent);
+      background: var(--cp-panel-strong);
+    }
+
+    .toolbar-separator {
+      height: 22px;
+      width: 1px;
+      margin: 0 5px;
+      background: color-mix(in srgb, var(--cp-ink-dark) 18%, transparent);
+    }
+
+    .route {
+      position: absolute;
+      top: 119px;
+      left: 38px;
+      width: 208px;
+    }
+
+    .mode-switch {
+      display: inline-flex;
+      padding: 3px;
+      gap: 3px;
+      background: color-mix(in srgb, var(--cp-panel) 72%, transparent);
+      border-radius: 6px;
+      margin-bottom: 21px;
+    }
+
+    .mode-switch button {
+      border: 0;
+      padding: 5px 11px;
+      font-size: 10px;
+      border-radius: 3px;
+      background: transparent;
+      color: var(--cp-text-muted);
+    }
+
+    .mode-switch button[aria-pressed="true"] {
+      background: var(--cp-surface);
+      color: var(--cp-accent);
+    }
+
+    .route-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .route-heading .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .live-dot {
+      height: 5px;
+      width: 5px;
+      border-radius: 50%;
+      background: var(--cp-accent);
+      display: inline-block;
+    }
+
+    .route-heading .mono {
+      font-size: 10px;
+    }
+
+    .progress {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+      margin: 9px 0 14px;
+    }
+
+    .progress span {
+      height: 3px;
+      background: color-mix(in srgb, var(--cp-ink-dark) 18%, transparent);
+    }
+
+    .progress span.active {
+      background: var(--cp-accent);
+    }
+
+    .progress span.done {
+      background: var(--cp-ink-dark);
+    }
+
+    .route-name {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .route-detail {
+      font-size: 10px;
+      margin-top: 6px;
+      opacity: 0.78;
+    }
+
+    .pilot-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 9px;
+      font-weight: 600;
+      margin-top: 22px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      color: var(--cp-ink-dark);
+    }
+
+    .pilot-button svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .pilot-button[aria-pressed="true"] .live-dot {
+      background: var(--cp-success);
+    }
+
+    #landmark {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      text-align: center;
+      white-space: nowrap;
+      text-shadow: 0 1px 10px var(--cp-sheen);
+    }
+
+    #landmark strong {
+      font-weight: 500;
+      font-size: 11px;
+    }
+
+    #landmark small {
+      display: block;
+      font-size: 9px;
+      opacity: 0.66;
+      margin-top: 3px;
+    }
+
+    #landmark::after {
+      content: "";
+      display: block;
+      width: 1px;
+      height: 23px;
+      background: color-mix(in srgb, var(--cp-ink-dark) 35%, transparent);
+      margin: 9px auto 0;
+    }
+
+    #reticle {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      width: 62px;
+      height: 22px;
+      transform: translate(-50%, -50%);
+      color: var(--cp-ink-light);
+      opacity: 0.78;
+      filter: drop-shadow(0 1px 2px var(--cp-ink-dark));
+    }
+
+    #reticle::before,
+    #reticle::after {
+      content: "";
+      position: absolute;
+      top: 10px;
+      width: 22px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    #reticle::before {
+      left: 0;
+    }
+
+    #reticle::after {
+      right: 0;
+    }
+
+    #reticle span {
+      width: 8px;
+      height: 8px;
+      border: 1px solid currentColor;
+      position: absolute;
+      left: 27px;
+      top: 6px;
+      border-radius: 50%;
+    }
+
+    #gate-label {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      color: var(--cp-ink-light);
+      font-size: 10px;
+      text-shadow: 0 1px 4px var(--cp-ink-dark);
+      white-space: nowrap;
+    }
+
+    #gate-label .gate-number {
+      font-size: 16px;
+      display: block;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    #next-bearing {
+      position: absolute;
+      top: 43%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--cp-ink-light);
+    }
+
+    #next-bearing svg {
+      width: 28px;
+      height: 28px;
+      filter: drop-shadow(0 1px 3px var(--cp-ink-dark));
+    }
+
+    .instruments {
+      position: absolute;
+      bottom: 35px;
+      left: 38px;
+      right: 38px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 25px;
+    }
+
+    .telemetry {
+      display: flex;
+      align-items: flex-start;
+      gap: 27px;
+      padding-top: 15px;
+      border-top: 1px solid color-mix(in srgb, var(--cp-ink-dark) 25%, transparent);
+    }
+
+    .instrument {
+      min-width: 91px;
+    }
+
+    .instrument .eyebrow {
+      opacity: 0.72;
+      margin-bottom: 5px;
+    }
+
+    .instrument-value {
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 400;
+    }
+
+    .instrument-value small {
+      font: 10px "Segoe UI", sans-serif;
+      margin-left: 4px;
+    }
+
+    .instrument-sub {
+      margin-top: 7px;
+      font-size: 9px;
+      opacity: 0.72;
+    }
+
+    .throttle-instrument {
+      min-width: 78px;
+    }
+
+    .throttle-instrument .instrument-value {
+      font-size: 23px;
+      margin-top: 9px;
+    }
+
+    .throttle-track {
+      width: 76px;
+      height: 3px;
+      background: color-mix(in srgb, var(--cp-ink-dark) 20%, transparent);
+      margin-top: 11px;
+    }
+
+    #throttle-fill {
+      height: 100%;
+      width: 60%;
+      background: var(--cp-accent);
+    }
+
+    .compass-area {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 255px;
+      text-align: center;
+    }
+
+    .heading {
+      font-size: 20px;
+      margin-bottom: 9px;
+    }
+
+    .heading small {
+      font-size: 10px;
+      margin-left: 7px;
+      opacity: 0.7;
+    }
+
+    .compass {
+      position: relative;
+      height: 28px;
+      overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent, var(--cp-text) 18%, var(--cp-text) 82%, transparent);
+    }
+
+    .compass::before {
+      content: "";
+      width: 1px;
+      height: 24px;
+      background: var(--cp-accent);
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 1;
+    }
+
+    #compass-ticks {
+      display: flex;
+      position: absolute;
+      top: 0;
+      left: 50%;
+    }
+
+    .compass-tick {
+      width: 46px;
+      flex-shrink: 0;
+      font-size: 8px;
+      padding-top: 11px;
+      position: relative;
+      opacity: 0.72;
+    }
+
+    .compass-tick::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      height: 6px;
+      width: 1px;
+      background: var(--cp-ink-dark);
+    }
+
+    .camera-caption {
+      border: 0;
+      background: transparent;
+      color: var(--cp-ink-dark);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 9px;
+      padding: 0;
+      font-size: 9px;
+    }
+
+    .camera-caption svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .navigation {
+      width: 166px;
+      flex-shrink: 0;
+    }
+
+    .map-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .map-header .mono {
+      font-size: 9px;
+      opacity: 0.75;
+    }
+
+    #minimap {
+      width: 166px;
+      height: 137px;
+      display: block;
+      border: 1px solid color-mix(in srgb, var(--cp-ink-dark) 24%, transparent);
+      background: var(--cp-panel);
+      border-radius: 4px;
+    }
+
+    .map-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 7px;
+      font-size: 8px;
+    }
+
+    .status-line {
+      position: absolute;
+      bottom: 12px;
+      left: 38px;
+      right: 38px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      opacity: 0.65;
+    }
+
+    #warning {
+      position: absolute;
+      left: 50%;
+      bottom: 162px;
+      transform: translateX(-50%);
+      padding: 7px 13px;
+      border-radius: 4px;
+      background: var(--cp-panel-strong);
+      color: var(--cp-danger);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    #toast {
+      position: absolute;
+      left: 50%;
+      top: 104px;
+      transform: translateX(-50%);
+      background: var(--cp-panel-strong);
+      border: 1px solid var(--cp-border);
+      color: var(--cp-text);
+      padding: 10px 16px;
+      font-size: 12px;
+      border-radius: 6px;
+      opacity: 0;
+      transition: opacity 0.25s;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      opacity: 1;
+    }
+
+    #cockpit-frame {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      border-bottom: 30px solid var(--cp-ink-dark);
+    }
+
+    #cockpit-frame::before,
+    #cockpit-frame::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      width: 18%;
+      height: 36%;
+      background: var(--cp-ink-dark);
+      opacity: 0.86;
+    }
+
+    #cockpit-frame::before {
+      left: 0;
+      clip-path: polygon(0 15%, 7% 25%, 100% 100%, 0 100%);
+    }
+
+    #cockpit-frame::after {
+      right: 0;
+      clip-path: polygon(100% 15%, 93% 25%, 0 100%, 100% 100%);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 15;
+      display: grid;
+      place-items: center;
+      background: color-mix(in srgb, var(--cp-ink-dark) 22%, transparent);
+      padding: 20px;
+    }
+
+    .pause-panel {
+      width: min(360px, 100%);
+      padding: 32px;
+      border-radius: 8px;
+      background: var(--cp-panel-strong);
+      box-shadow: var(--cp-shadow);
+      text-align: center;
+      color: var(--cp-text);
+    }
+
+    .pause-panel>svg {
+      width: 32px;
+      height: 32px;
+      color: var(--cp-accent);
+    }
+
+    .pause-panel .eyebrow {
+      color: var(--cp-text-muted);
+      margin-top: 18px;
+    }
+
+    .pause-panel h1 {
+      margin: 9px 0 12px;
+      font-size: 29px;
+      font-weight: 500;
+    }
+
+    .pause-panel p {
+      margin: 0 0 24px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--cp-text-muted);
+    }
+
+    .action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      border: 1px solid var(--cp-border);
+      border-radius: 6px;
+      padding: 11px 15px;
+      font-size: 12px;
+      background: var(--cp-surface);
+      color: var(--cp-text);
+    }
+
+    .action.primary {
+      background: var(--cp-accent);
+      color: var(--cp-accent-fg);
+      border-color: var(--cp-accent);
+    }
+
+    .pause-panel .action {
+      width: 100%;
+      margin-top: 9px;
+    }
+
+    dialog {
+      width: min(430px, calc(100% - 32px));
+      padding: 26px;
+      max-height: calc(100dvh - 40px);
+      border: 1px solid var(--cp-border);
+      border-radius: 8px;
+      background: var(--cp-panel-strong);
+      color: var(--cp-text);
+      box-shadow: var(--cp-shadow);
+    }
+
+    dialog::backdrop {
+      background: color-mix(in srgb, var(--cp-ink-dark) 25%, transparent);
+    }
+
+    .dialog-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 23px;
+    }
+
+    .dialog-heading h2 {
+      font-weight: 500;
+      font-size: 23px;
+      margin: 0;
+    }
+
+    .dialog-heading .icon-button {
+      border-color: var(--cp-border);
+    }
+
+    .setting {
+      margin: 21px 0;
+    }
+
+    .setting>label,
+    .setting-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .setting output {
+      color: var(--cp-text-muted);
+      font-size: 11px;
+    }
+
+    .segmented {
+      display: flex;
+      border: 1px solid var(--cp-border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .segmented button {
+      flex: 1;
+      border: 0;
+      background: var(--cp-surface);
+      color: var(--cp-text-muted);
+      padding: 10px 5px;
+      font-size: 11px;
+    }
+
+    .segmented button[aria-pressed="true"] {
+      background: var(--cp-accent-soft);
+      color: var(--cp-accent);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 18px;
+      accent-color: var(--cp-accent);
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--cp-accent);
+      width: 17px;
+      height: 17px;
+    }
+
+    select {
+      border: 1px solid var(--cp-border);
+      border-radius: 5px;
+      background: var(--cp-surface);
+      padding: 8px;
+      font-size: 11px;
+      color: var(--cp-text);
+    }
+
+    .setting-inline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 17px 0;
+      gap: 15px;
+      font-size: 12px;
+    }
+
+    .setting-inline label {
+      flex: 1;
+    }
+
+    .dialog-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 17px;
+      border-top: 1px solid var(--cp-border);
+    }
+
+    .dialog-footer .mono {
+      font-size: 10px;
+      color: var(--cp-text-muted);
+    }
+
+    #photo-bar {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      padding: 7px;
+      border-radius: 8px;
+      background: var(--cp-panel-strong);
+      color: var(--cp-text);
+    }
+
+    .photo-label {
+      display: flex;
+      align-items: center;
+      margin: 0 12px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .touch-controls {
+      display: none;
+    }
+
+    @keyframes arrive {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .masthead,
+    .route,
+    .instruments {
+      animation: arrive 0.8s ease-out both;
+    }
+
+    .route {
+      animation-delay: 0.15s;
+    }
+
+    .instruments {
+      animation-delay: 0.3s;
+    }
+
+    @media (max-width: 1000px) {
+      .location {
+        display: none;
+      }
+
+      .compass-area {
+        left: 60%;
+        width: 195px;
+      }
+
+      .telemetry {
+        gap: 16px;
+      }
+
+      .instrument {
+        min-width: 78px;
+      }
+
+      .navigation {
+        width: 140px;
+      }
+
+      #minimap {
+        width: 140px;
+        height: 116px;
+      }
+    }
+
+    @media (max-width: 700px), (pointer: coarse) {
+      .location {
+        display: none;
+      }
+
+      .masthead {
+        top: max(18px, env(safe-area-inset-top));
+        left: max(18px, calc(env(safe-area-inset-left) + 12px));
+        right: max(18px, calc(env(safe-area-inset-right) + 12px));
+        gap: 10px;
+      }
+
+      .brand {
+        gap: 7px;
+      }
+
+      .brand>svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      .brand-name {
+        font-size: 19px;
+      }
+
+      .brand .eyebrow {
+        font-size: 7px;
+        margin-top: 4px;
+      }
+
+      .toolbar {
+        gap: 4px;
+      }
+
+      .icon-button {
+        width: 33px;
+        height: 33px;
+      }
+
+      .toolbar .desktop-only,
+      .toolbar-separator {
+        display: none;
+      }
+
+      .route {
+        top: calc(max(18px, env(safe-area-inset-top)) + 74px);
+        left: max(20px, calc(env(safe-area-inset-left) + 12px));
+        width: 165px;
+      }
+
+      .mode-switch {
+        margin-bottom: 15px;
+      }
+
+      .mode-switch button {
+        padding: 4px 9px;
+        font-size: 9px;
+      }
+
+      .route-name {
+        font-size: 14px;
+      }
+
+      .route-detail {
+        font-size: 9px;
+      }
+
+      .pilot-button {
+        margin-top: 14px;
+        font-size: 8px;
+      }
+
+      .instruments {
+        bottom: max(31px, calc(env(safe-area-inset-bottom) + 14px));
+        left: max(20px, calc(env(safe-area-inset-left) + 12px));
+        right: max(20px, calc(env(safe-area-inset-right) + 12px));
+        gap: 10px;
+      }
+
+      .telemetry {
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .instrument-value {
+        font-size: 28px;
+      }
+
+      .instrument {
+        min-width: 65px;
+      }
+
+      .throttle-instrument {
+        min-width: 61px;
+      }
+
+      .throttle-track {
+        width: 61px;
+      }
+
+      .instrument .eyebrow {
+        font-size: 8px;
+      }
+
+      .instrument-sub {
+        font-size: 8px;
+      }
+
+      .navigation,
+      .compass-area {
+        display: none;
+      }
+
+      .status-line {
+        left: max(20px, calc(env(safe-area-inset-left) + 12px));
+        right: max(20px, calc(env(safe-area-inset-right) + 12px));
+        bottom: max(10px, env(safe-area-inset-bottom));
+        font-size: 7px;
+      }
+
+      .status-line>span:last-child {
+        display: none;
+      }
+
+      #landmark strong {
+        font-size: 9px;
+      }
+
+      #landmark small {
+        font-size: 8px;
+      }
+
+      #reticle {
+        top: 42%;
+        opacity: 0.55;
+      }
+
+      #toast {
+        top: calc(max(18px, env(safe-area-inset-top)) + 57px);
+        font-size: 10px;
+        padding: 8px 12px;
+      }
+
+      #warning {
+        bottom: 260px;
+        font-size: 9px;
+      }
+
+      .touch-controls {
+        display: block;
+      }
+
+      #stick {
+        pointer-events: auto;
+        touch-action: none;
+        position: absolute;
+        bottom: max(141px, calc(env(safe-area-inset-bottom) + 124px));
+        left: max(22px, calc(env(safe-area-inset-left) + 12px));
+        width: 104px;
+        height: 104px;
+        border: 1px solid color-mix(in srgb, var(--cp-ink-light) 60%, transparent);
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--cp-panel) 22%, transparent);
+      }
+
+      #stick::before,
+      #stick::after {
+        content: "";
+        position: absolute;
+        background: color-mix(in srgb, var(--cp-ink-light) 30%, transparent);
+      }
+
+      #stick::before {
+        width: 1px;
+        height: 80px;
+        top: 11px;
+        left: 51px;
+      }
+
+      #stick::after {
+        height: 1px;
+        width: 80px;
+        left: 11px;
+        top: 51px;
+      }
+
+      #stick-knob {
+        position: absolute;
+        left: 33px;
+        top: 33px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--cp-panel);
+        border: 1px solid var(--cp-border);
+      }
+
+      .touch-actions {
+        position: absolute;
+        right: max(23px, calc(env(safe-area-inset-right) + 12px));
+        bottom: max(147px, calc(env(safe-area-inset-bottom) + 130px));
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .touch-actions button {
+        width: 42px;
+        height: 42px;
+        touch-action: none;
+      }
+
+      #photo-bar {
+        bottom: max(18px, calc(env(safe-area-inset-bottom) + 12px));
+      }
+
+      .photo-label {
+        margin: 0 6px;
+      }
+
+      #cockpit-frame {
+        border-bottom-width: 18px;
+      }
+
+      .overlay {
+        padding: max(12px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+          max(12px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      }
+
+      .pause-panel {
+        max-height: 100%;
+        overflow-y: auto;
+      }
+
+      dialog {
+        max-height: calc(100dvh - max(20px, env(safe-area-inset-top)) - max(20px, env(safe-area-inset-bottom)));
+      }
+    }
+
+    @media (max-height: 540px) {
+      .route {
+        top: 85px;
+      }
+
+      .route .mode-switch {
+        margin-bottom: 10px;
+      }
+
+      .route .pilot-button {
+        margin-top: 10px;
+      }
+
+      .navigation {
+        display: none;
+      }
+
+      .compass-area {
+        left: auto;
+        right: 0;
+        transform: none;
+      }
+
+      .instruments {
+        bottom: 26px;
+      }
+    }
+
+    @media (max-height: 540px) and (max-width: 700px) and (orientation: landscape),
+      (max-height: 540px) and (pointer: coarse) and (orientation: landscape) {
+      .route {
+        top: calc(max(18px, env(safe-area-inset-top)) + 54px);
+        left: calc(max(22px, calc(env(safe-area-inset-left) + 12px)) + 124px);
+      }
+
+      .route .mode-switch {
+        margin-bottom: 8px;
+      }
+
+      .route .progress {
+        margin: 6px 0 8px;
+      }
+
+      .route-detail {
+        display: none;
+      }
+
+      .instruments {
+        left: calc(max(22px, calc(env(safe-area-inset-left) + 12px)) + 124px);
+        right: calc(max(23px, calc(env(safe-area-inset-right) + 12px)) + 62px);
+        bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
+      }
+
+      #stick,
+      .touch-actions {
+        bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
+      }
+
+      #warning {
+        bottom: 130px;
+      }
+
+      #toast {
+        left: auto;
+        right: max(23px, calc(env(safe-area-inset-right) + 12px));
+        transform: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="world" aria-label="3D flight over Mount Fuji"></canvas>
+  <div id="loading">
+    <h1>Fuji Flight</h1>
+    <p>Preparing the mountain air...</p>
+  </div>
+  <div id="cockpit-frame" hidden></div>
+  <main id="flight-ui" aria-label="Flight instruments">
+    <header class="masthead">
+      <div class="brand"><i data-lucide="mountain"></i>
+        <div>
+          <div class="brand-name">FUJI <span>/ FLIGHT</span></div>
+          <div class="eyebrow">Alpine circuit &nbsp; / &nbsp; Flight no. 035</div>
+        </div>
+      </div>
+      <nav class="toolbar" aria-label="Flight tools">
+        <button id="camera-button" class="icon-button" title="Change camera (C)" aria-label="Change camera"><i
+            data-lucide="camera"></i></button>
+        <button id="photo-button" class="icon-button desktop-only" title="Photo mode (O)" aria-label="Photo mode"><i
+            data-lucide="aperture"></i></button>
+        <button id="audio-button" class="icon-button desktop-only" title="Engine sound (M)"
+          aria-label="Enable engine sound" aria-pressed="false"><i data-lucide="volume-x"></i></button>
+        <span class="toolbar-separator"></span>
+        <button id="pause-button" class="icon-button" title="Pause flight (P)" aria-label="Pause flight"><i
+            data-lucide="pause"></i></button>
+        <button id="settings-button" class="icon-button" title="Flight settings" aria-label="Flight settings"><i
+            data-lucide="sliders-horizontal"></i></button>
+      </nav>
+    </header>
+    <div class="location">
+      <div class="eyebrow">Yamanashi Prefecture, Japan</div>
+      <div class="mono">35.3606&deg; N &nbsp; 138.7274&deg; E</div>
+    </div>
+    <section class="route" aria-label="Route progress">
+      <div class="mode-switch" aria-label="Flight mode"><button id="circuit-mode"
+          aria-pressed="true">Circuit</button><button id="free-mode" aria-pressed="false">Free flight</button></div>
+      <div class="route-heading"><span class="eyebrow"><span class="live-dot"></span><span id="route-title">The Fuji
+            circuit</span></span><span id="gate-count" class="mono">01 / 08</span></div>
+      <div id="route-progress" class="progress"><span
+          class="active"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <h2 id="route-name" class="route-name">Lake approach</h2>
+      <div id="route-detail" class="route-detail mono">2.0 km &nbsp; / &nbsp; 1,120 m ASL</div>
+      <button id="autopilot-button" class="pilot-button" aria-pressed="true"
+        title="Toggle autopilot (G); steering takes manual control"><span class="live-dot"></span><span
+          id="pilot-label">AUTOPILOT ENGAGED</span><i data-lucide="navigation"></i></button>
+    </section>
+    <div id="landmark"><strong>MOUNT FUJI</strong><small class="mono">3,776 M &nbsp; / &nbsp; JAPAN</small></div>
+    <div id="reticle" aria-hidden="true"><span></span></div>
+    <div id="gate-label" class="mono"><span class="gate-number">01</span><span id="gate-distance">2.0 km</span></div>
+    <div id="next-bearing" hidden title="Next checkpoint bearing"><i data-lucide="navigation"></i></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <div id="warning" hidden role="status">TERRAIN &middot; PULL UP</div>
+    <footer class="instruments">
+      <div class="telemetry">
+        <div class="instrument">
+          <div class="eyebrow">Airspeed</div>
+          <div class="instrument-value mono"><span id="speed">379</span><small>KT</small></div>
+          <div class="instrument-sub mono" id="mach">M 0.57</div>
+        </div>
+        <div class="instrument">
+          <div class="eyebrow">Altitude</div>
+          <div class="instrument-value mono"><span id="altitude">1,100</span><small>M</small></div>
+          <div class="instrument-sub mono" id="vertical-speed">V/S +0 m/s</div>
+        </div>
+        <div class="instrument throttle-instrument">
+          <div class="eyebrow">Throttle</div>
+          <div class="instrument-value mono"><span id="throttle">60</span><small>%</small></div>
+          <div class="throttle-track">
+            <div id="throttle-fill"></div>
+          </div>
+          <div class="instrument-sub" id="engine-status">MIL POWER</div>
+        </div>
+      </div>
+      <div class="compass-area">
+        <div class="heading mono"><span id="heading">000</span><small id="cardinal">N</small></div>
+        <div class="compass">
+          <div id="compass-ticks"></div>
+        </div><button id="camera-caption" class="camera-caption" title="Change camera (C)"><i
+            data-lucide="camera"></i><span id="camera-label">CHASE CAMERA</span></button>
+      </div>
+      <aside class="navigation" aria-label="Navigation map">
+        <div class="map-header"><span class="eyebrow">Flight plan</span><span id="elapsed" class="mono">00:00</span>
+        </div><canvas id="minimap" width="332" height="274" aria-label="Course map and aircraft position"></canvas>
+        <div class="map-footer mono"><span>FUJI FIVE LAKES</span><span>N &uarr;</span></div>
+      </aside>
+    </footer>
+    <div class="status-line mono"><span>F-35A INSPIRED &nbsp; / &nbsp; 035 &nbsp; / &nbsp; <span id="flight-status">IN
+          FLIGHT</span></span><span id="best-score">FUJI CIRCUIT &nbsp; / &nbsp; 8 WAYPOINTS</span></div>
+    <div class="touch-controls">
+      <div id="stick" role="application" aria-label="Flight stick: drag to bank and pitch" title="Bank and pitch"><span
+          id="stick-knob"></span></div>
+      <div class="touch-actions"><button id="touch-boost" class="icon-button" title="Afterburner"
+          aria-label="Afterburner"><i data-lucide="rocket"></i></button><button id="touch-throttle-up"
+          class="icon-button" title="Increase throttle" aria-label="Increase throttle"><i
+            data-lucide="plus"></i></button><button id="touch-throttle-down" class="icon-button"
+          title="Decrease throttle" aria-label="Decrease throttle"><i data-lucide="minus"></i></button></div>
+    </div>
+  </main>
+  <div id="pause-screen" class="overlay" hidden>
+    <section class="pause-panel" role="dialog" aria-modal="true" aria-labelledby="pause-title"><i
+        data-lucide="mountain"></i>
+      <div class="eyebrow" id="pause-eyebrow">The Fuji circuit</div>
+      <h1 id="pause-title">Flight paused</h1>
+      <p id="pause-detail">Lake approach &middot; 00:00</p><button id="resume-button" class="action primary"><i
+          data-lucide="play"></i>Resume flight</button><button id="restart-button" class="action"><i
+          data-lucide="rotate-ccw"></i>Restart flight</button>
+    </section>
+  </div>
+  <dialog id="settings" aria-labelledby="settings-title">
+    <div class="dialog-heading">
+      <h2 id="settings-title">Flight deck</h2><button id="close-settings" class="icon-button"
+        aria-label="Close settings" title="Close settings"><i data-lucide="x"></i></button>
+    </div>
+    <div class="setting">
+      <div class="setting-title">Camera</div>
+      <div class="segmented" id="camera-options"><button data-camera="chase" aria-pressed="true">Chase</button><button
+          data-camera="cockpit" aria-pressed="false">Cockpit</button><button data-camera="orbit"
+          aria-pressed="false">Orbit</button></div>
+    </div>
+    <div class="setting"><label for="throttle-setting">Throttle <output id="throttle-output">60%</output></label><input
+        id="throttle-setting" type="range" min="0" max="100" value="60"></div>
+    <div class="setting"><label for="sensitivity">Flight sensitivity <output
+          id="sensitivity-output">1.0&times;</output></label><input id="sensitivity" type="range" min="0.5" max="1.8"
+        value="1" step="0.1"></div>
+    <div class="setting-inline"><label for="assist-setting">Route autopilot</label><input id="assist-setting"
+        type="checkbox" checked></div>
+    <div class="setting-inline"><label for="sound-setting">Engine sound</label><input id="sound-setting"
+        type="checkbox"></div>
+    <div class="setting-inline"><label for="light-setting">Light</label><select id="light-setting">
+        <option value="morning">Alpine morning</option>
+        <option value="golden">Golden hour</option>
+        <option value="noon">Clear midday</option>
+      </select></div>
+    <div class="setting-inline"><label for="quality-setting">Render quality</label><select id="quality-setting">
+        <option value="balanced">Balanced</option>
+        <option value="high">High</option>
+        <option value="low">Low</option>
+      </select></div>
+    <div class="dialog-footer"><span class="mono">F-35A / FUJI 035</span>
+      <div class="toolbar"><button id="settings-photo" class="icon-button" title="Photo mode" aria-label="Photo mode"><i
+            data-lucide="aperture"></i></button><button id="fullscreen-button" class="icon-button"
+          title="Toggle fullscreen" aria-label="Toggle fullscreen"><i data-lucide="maximize"></i></button></div>
+    </div>
+  </dialog>
+  <div id="photo-bar" hidden><span class="photo-label">FUJI / PHOTO</span><button id="save-photo" class="icon-button"
+      title="Download photo" aria-label="Download photo"><i data-lucide="download"></i></button><button id="close-photo"
+      class="icon-button" title="Exit photo mode (O)" aria-label="Exit photo mode"><i data-lucide="x"></i></button>
+  </div>
+  <!-- GAME_SCRIPT -->
+</body>
+
+</html>
