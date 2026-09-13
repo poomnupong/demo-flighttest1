@@ -81,9 +81,8 @@ for (const [id, length, span] of [['f35', 15.7, 10.7], ['f22', 18.9, 13.6], ['b7
     assert.ok(instanceCount > drawCalls * 5);
     // Measure local (pre-group-scale) geometry so the reference proportions stay comparable.
     jet.updateMatrixWorld(true);
-    const scale = jet.scale.x;
-    const bodySize = bounds(jet.getObjectByName('fuselage')).getSize(new THREE.Vector3()).divideScalar(scale);
-    const wingSize = bounds(jet.getObjectByName('wings')).getSize(new THREE.Vector3()).divideScalar(scale);
+    const bodySize = bounds(jet.getObjectByName('fuselage')).getSize(new THREE.Vector3()).divide(jet.scale);
+    const wingSize = bounds(jet.getObjectByName('wings')).getSize(new THREE.Vector3()).divide(jet.scale);
     assert.ok(Math.abs(bodySize.z - length) < 0.001);
     assert.ok(Math.abs(wingSize.x - span) < 0.001);
     assert.ok(Math.abs(wingSize.x / bodySize.z - span / length) < 0.001);
