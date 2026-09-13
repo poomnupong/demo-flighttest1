@@ -37,16 +37,17 @@ export function createWorld(palette, sceneId = 'fuji') {
       zenith: { value: tint('sky-top') },
       horizon: { value: tint('sky-horizon') },
       sunlight: { value: tint('sun') },
+      daylight: { value: 1 },
     },
     vertexShader: 'varying vec3 direction; void main(){direction=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-    fragmentShader: `varying vec3 direction; uniform vec3 zenith; uniform vec3 horizon; uniform vec3 sunlight;
+    fragmentShader: `varying vec3 direction; uniform vec3 zenith; uniform vec3 horizon; uniform vec3 sunlight; uniform float daylight;
       void main(){
         vec3 ray=normalize(direction);
         float elevation=clamp(ray.y,0.0,1.0);
         vec3 skyColor=mix(horizon,zenith,pow(smoothstep(-0.12,0.7,ray.y),0.42));
         float sunDistance=dot(ray,normalize(vec3(-0.65,0.30,-0.72)));
-        skyColor=mix(skyColor,sunlight,pow(max(sunDistance,0.0),40.0)*0.22);
-        skyColor=mix(skyColor,sunlight,smoothstep(0.9990,0.9994,sunDistance));
+        skyColor=mix(skyColor,sunlight,pow(max(sunDistance,0.0),40.0)*0.22*daylight);
+        skyColor=mix(skyColor,sunlight,smoothstep(0.9990,0.9994,sunDistance)*daylight);
         gl_FragColor=vec4(skyColor,1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>

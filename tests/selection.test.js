@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import * as THREE from 'three';
+import { createWorld } from '../src/world.js';
 import { localDayPeriod } from '../src/settings.js';
 
 const source = readFileSync(new URL('../src/game.js', import.meta.url), 'utf8');
@@ -42,7 +43,7 @@ test('scene selection disposes the old world, resets its flight, and remains pau
   }
 });
 
-test('lighting changes sky, sun, ambient light, stars and moon without restarting flight', () => {
+test('lighting changes the real world sky, sun, ambient light, stars and moon without restarting flight', (t) => {
   const elements = new Map();
   const element = (id) => {
     if (!elements.has(id)) elements.set(id, { value: id === 'day-setting' ? 'night' : 'morning' });
@@ -52,16 +53,13 @@ test('lighting changes sky, sun, ambient light, stars and moon without restartin
     'night-top': '#101831', 'night-horizon': '#394273', 'sky-top': '#528ec6',
     'sky-horizon': '#f5d9b0', snow: '#ffffff', moon: '#d6e7ff', sun: '#fff2cf',
   };
+  const palette = (name) => colors[name] ?? '#ffffff';
+  const world = createWorld(palette);
+  t.after(() => world.dispose());
   const context = {
-    THREE, element, palette: (name) => colors[name], localDayPeriod,
+    THREE, element, palette, localDayPeriod,
     selectedScene: { latitude: 35.36, longitude: 138.73 }, lightMinute: -1, dayPeriod: 'day',
-    world: {
-      sky: { material: { uniforms: { zenith: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, daylight: { value: 1 } } } },
-      scene: { fog: { color: new THREE.Color() } },
-      sun: { color: new THREE.Color(), intensity: 3.1 },
-      hemisphere: { color: new THREE.Color(), intensity: 1.85 },
-      stars: { visible: false }, moon: { visible: false },
-    },
+    world,
     renderer: {},
   };
   runInNewContext(lighting, context);
