@@ -32,6 +32,7 @@ function boot() {
   let photoPreviousCamera = 'chase';
   let settingsWasPaused = false;
   let sensitivity = 1;
+  let invertY = true;
   let drag = null;
   let snapCamera = true;
   let toastUntil = 0;
@@ -433,6 +434,7 @@ function boot() {
   element('sound-setting').onchange = (event) => setAudio(event.target.checked);
   element('throttle-setting').oninput = (event) => { flight.throttle = Number(event.target.value) / 100; element('throttle-output').value = `${event.target.value}%`; updateHUD(); };
   element('sensitivity').oninput = (event) => { sensitivity = Number(event.target.value); element('sensitivity-output').value = `${sensitivity.toFixed(1)}x`; };
+  element('invert-setting').onchange = (event) => { invertY = event.target.checked; };
   element('camera-options').onclick = (event) => { const button = event.target.closest('[data-camera]'); if (button) setCamera(button.dataset.camera); };
   element('quality-setting').onchange = (event) => {
     const ratios = { low: 1, balanced: 1.6, high: 2.2 };
@@ -504,7 +506,7 @@ function boot() {
     requestAnimationFrame(frame);
     const delta = Math.min(clock.getDelta(), 0.05);
     const manual = {
-      pitch: ((keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) + touch.pitch) * sensitivity,
+      pitch: ((keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) + touch.pitch) * sensitivity * (invertY ? -1 : 1),
       roll: ((keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0) - (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) + touch.roll) * sensitivity,
       yaw: ((keys.has('KeyQ') ? 1 : 0) - (keys.has('KeyE') ? 1 : 0)) * sensitivity,
       throttle: (keys.has('Equal') || keys.has('BracketRight') ? 1 : 0) - (keys.has('Minus') || keys.has('BracketLeft') ? 1 : 0) + touch.throttle,
