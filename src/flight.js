@@ -8,7 +8,7 @@ export const ROUTE = [
   { x: -950, y: 1390, z: -2300, name: 'Lakeside climb' },
   { x: -3100, y: 2110, z: -4300, name: 'Western ridge' },
   { x: -2200, y: 3130, z: -6200, name: 'Snow line' },
-  { x: -450, y: 3680, z: -5600, name: 'Summit pass' },
+  { x: -450, y: 4120, z: -5600, name: 'Summit pass' },
   { x: 2150, y: 2540, z: -5400, name: 'Eastern descent' },
   { x: 2600, y: 1540, z: -2800, name: 'Forest run' },
   { x: 700, y: 1130, z: 800, name: 'Homeward' },
@@ -24,8 +24,12 @@ export function terrainHeight(worldX, worldZ) {
   const radial = Math.hypot((worldX - FUJI.x) * 0.98, worldZ - FUJI.z);
   const angle = Math.atan2(worldZ - FUJI.z, worldX - FUJI.x);
   const ridge = 1 + Math.sin(angle * 9 + radial * 0.0008) * 0.035 + Math.cos(angle * 15) * 0.016;
-  const volcano = 3480 * Math.pow(Math.max(0, 1 - radial / (3800 * ridge)), 1.28)
-    - 280 * Math.exp(-Math.pow(radial / 175, 2));
+  // Real Mount Fuji: summit 3,776 m (Kengamine, on the crater rim), with a roughly
+  // 700 m wide, 200 m deep summit crater; the rim height, not the crater center, is
+  // the mountain's true high point, so the crater term is narrow enough to leave a
+  // rim close to 3,776 m rather than simply lowering the center peak.
+  const volcano = 3976 * Math.pow(Math.max(0, 1 - radial / (3800 * ridge)), 1.28)
+    - 800 * Math.exp(-Math.pow(radial / 70, 2));
   const rolling = 130 + 105 * Math.sin(worldX * 0.00073 + worldZ * 0.00024)
     + 90 * Math.cos(worldZ * 0.00082 - worldX * 0.0002)
     + 42 * Math.sin(worldX * 0.0019) * Math.cos(worldZ * 0.0018);

@@ -7,7 +7,8 @@ export function createWorld(palette) {
   scene.fog = new THREE.Fog(palette('sky-horizon'), 6200, 20500);
   const sun = new THREE.DirectionalLight(palette('sun'), 3.1);
   sun.position.set(-6500, 7500, 2500);
-  scene.add(sun, new THREE.HemisphereLight(palette('snow'), palette('rock'), 1.85));
+  const hemisphere = new THREE.HemisphereLight(palette('snow'), palette('rock'), 1.85);
+  scene.add(sun, hemisphere);
   const sky = new THREE.Mesh(new THREE.SphereGeometry(32000, 32, 20), new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
@@ -172,14 +173,43 @@ export function createWorld(palette) {
     clouds.add(cloud);
   }
   scene.add(clouds);
+  const stars = new THREE.Group();
+  const starMaterial = new THREE.MeshBasicMaterial({ color: palette('star'), transparent: true, opacity: 0.9 });
+  const starBlocks = [];
+  for (let starIndex = 0; starIndex < 420; starIndex++) {
+    const azimuth = random() * Math.PI * 2;
+    const elevation = 0.12 + random() * 0.78;
+    const radius = 27500;
+    const size = 18 + random() * 34;
+    starBlocks.push({
+      position: [Math.cos(azimuth) * Math.cos(elevation) * radius, Math.sin(elevation) * radius, Math.sin(azimuth) * Math.cos(elevation) * radius],
+      size: [size, size, size],
+      color: tint('star'),
+    });
+  }
+  stars.add(blockBatch(starBlocks, starMaterial));
+  stars.visible = false;
+  scene.add(stars);
+  const moon = new THREE.Group();
+  const moonMaterial = new THREE.MeshBasicMaterial({ color: palette('moon') });
+  for (let row = -2; row <= 2; row++) {
+    for (let column = -2; column <= 2; column++) {
+      if (Math.hypot(row, column) > 2.4) continue;
+      const face = new THREE.Mesh(cube, moonMaterial);
+      face.position.set(column * 95, row * 95, 0);
+      face.scale.set(95, 95, 60);
+      moon.add(face);
+    }
+  }
+  moon.position.set(6200, 6800, -9000);
+  moon.visible = false;
+  scene.add(moon);
   const gates = ROUTE.map((gate, index) => {
     const group = new THREE.Group();
     const material = new THREE.MeshStandardMaterial({ color: palette('gate'), emissive: palette('gate'), emissiveIntensity: 0.28, roughness: 0.65 });
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(GATE_RADIUS, 6, 4, 48), material);
-    group.add(ring);
-    for (let segment = 0; segment < 12; segment++) {
-      const angle = segment / 12 * Math.PI * 2;
-      const marker = new THREE.Mesh(new THREE.BoxGeometry(13, 25, 13), material);
+    for (let segment = 0; segment < 16; segment++) {
+      const angle = segment / 16 * Math.PI * 2;
+      const marker = new THREE.Mesh(new THREE.BoxGeometry(13, 30, 20), material);
       marker.position.set(Math.cos(angle) * GATE_RADIUS, Math.sin(angle) * GATE_RADIUS, 0);
       marker.rotation.z = angle;
       group.add(marker);
@@ -189,7 +219,7 @@ export function createWorld(palette) {
     scene.add(group);
     return group;
   });
-  return { scene, sky, sun, terrain, water, glints, clouds, gates };
+  return { scene, sky, sun, hemisphere, terrain, water, glints, clouds, stars, moon, gates };
 }
 
 export function createJet(palette) {
@@ -263,27 +293,23 @@ export function createJet(palette) {
     intake.position.set(side * 1.92, -0.06, -3.7);
     intake.rotation.y = side * -0.22;
     jet.add(intake);
-    const roundelBase = new THREE.Mesh(new THREE.CircleGeometry(0.65, 24), lightMaterial);
-    roundelBase.rotation.x = -Math.PI / 2;
+    const roundelBase = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.05, 1.3), lightMaterial);
     roundelBase.position.set(side * 6.2, 0.455, 3.15);
     jet.add(roundelBase);
-    const roundel = new THREE.Mesh(new THREE.CircleGeometry(0.43, 24), material('torii'));
-    roundel.rotation.x = -Math.PI / 2;
+    const roundel = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.05, 0.86), material('torii'));
     roundel.position.set(side * 6.2, 0.465, 3.15);
     jet.add(roundel);
     const wingLight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.8), new THREE.MeshBasicMaterial({ color: palette(side < 0 ? 'torii' : 'grass-light') }));
     wingLight.position.set(side * 9.9, 0.43, 4.1);
     jet.add(wingLight);
   }
-  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.25, 1.9, 12, 1, true), darkMaterial);
-  nozzle.rotation.x = Math.PI / 2;
+  const nozzle = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.1, 1.9), darkMaterial);
   nozzle.position.set(0, 0.08, 9.9);
   jet.add(nozzle);
-  const exhaustDisk = new THREE.Mesh(new THREE.CircleGeometry(0.91, 24), new THREE.MeshBasicMaterial({ color: palette('exhaust') }));
+  const exhaustDisk = new THREE.Mesh(new THREE.BoxGeometry(1.7, 1.7, 0.08), new THREE.MeshBasicMaterial({ color: palette('exhaust') }));
   exhaustDisk.position.set(0, 0.08, 10.87);
   jet.add(exhaustDisk);
-  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.88, 7, 12, 1, true), new THREE.MeshBasicMaterial({ color: palette('exhaust'), transparent: true, opacity: 0.38, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
-  flame.rotation.x = Math.PI / 2;
+  const flame = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 7), new THREE.MeshBasicMaterial({ color: palette('exhaust'), transparent: true, opacity: 0.38, depthWrite: false, blending: THREE.AdditiveBlending }));
   flame.position.set(0, 0.08, 13);
   jet.add(flame);
   const panelLines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([
