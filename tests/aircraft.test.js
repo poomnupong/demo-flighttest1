@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { AIRCRAFT, createJet, disposeAircraft } from '../src/aircraft.js';
+import { AIRCRAFT, createJet, disposeAircraft, quantize8bit } from '../src/aircraft.js';
 
 const palette = (name) => ({
   jet: '#586872', 'jet-light': '#8799a3', 'jet-dark': '#263440',
@@ -36,6 +36,33 @@ test('catalog provides selectable aircraft, scaled cameras and afterburner capab
   disposeAircraft(fallback);
 });
 
+test('quantize8bit clamps colors to a 256-color (3-3-2 bit) palette', () => {
+  assert.equal(quantize8bit('#ffffff'), '#ffffff');
+  assert.equal(quantize8bit('#000000'), '#000000');
+  // RGB332 levels on the encoded sRGB bytes: red/green in 8 steps, blue in 00/55/aa/ff.
+  assert.equal(quantize8bit('#8799a3'), '#9292aa');
+  assert.equal(quantize8bit('#365665'), '#244955');
+  // Repeated quantization must be stable (idempotent) once a color is already on the palette.
+  const once = quantize8bit('#8799a3');
+  assert.equal(quantize8bit(once), once);
+});
+
+for (const [id, length, span] of [['f35', 15.7, 10.7], ['f22', 18.9, 13.6], ['b787', 56.7, 60.1]]) {
+  test(`${id} is built at reference proportions then scaled 100% larger as a whole`, () => {
+    const aircraft = createJet(palette, id);
+    const { jet } = aircraft;
+    assert.deepEqual(jet.scale.toArray(), [2, 2, 2]);
+    assert.equal(jet.userData.dimensions.length, length * 2);
+    assert.equal(jet.userData.dimensions.span, span * 2);
+    jet.updateMatrixWorld(true);
+    const bodySize = bounds(jet.getObjectByName('fuselage')).getSize(new THREE.Vector3());
+    const wingSize = bounds(jet.getObjectByName('wings')).getSize(new THREE.Vector3());
+    assert.ok(Math.abs(bodySize.z - length * 2) < 0.01);
+    assert.ok(Math.abs(wingSize.x - span * 2) < 0.01);
+    disposeAircraft(aircraft);
+  });
+}
+
 for (const [id, length, span] of [['f35', 15.7, 10.7], ['f22', 18.9, 13.6], ['b787', 56.7, 60.1]]) {
   test(`${id} has reference proportions, stepped swept wings and shared box geometry only`, () => {
     const aircraft = createJet(palette, id);
@@ -52,8 +79,10 @@ for (const [id, length, span] of [['f35', 15.7, 10.7], ['f22', 18.9, 13.6], ['b7
     });
     assert.equal(geometries.size, 1);
     assert.ok(instanceCount > drawCalls * 5);
-    const bodySize = bounds(jet.getObjectByName('fuselage')).getSize(new THREE.Vector3());
-    const wingSize = bounds(jet.getObjectByName('wings')).getSize(new THREE.Vector3());
+    // Measure local (pre-group-scale) geometry so the reference proportions stay comparable.
+    jet.updateMatrixWorld(true);
+    const bodySize = bounds(jet.getObjectByName('fuselage')).getSize(new THREE.Vector3()).divide(jet.scale);
+    const wingSize = bounds(jet.getObjectByName('wings')).getSize(new THREE.Vector3()).divide(jet.scale);
     assert.ok(Math.abs(bodySize.z - length) < 0.001);
     assert.ok(Math.abs(wingSize.x - span) < 0.001);
     assert.ok(Math.abs(wingSize.x / bodySize.z - span / length) < 0.001);
@@ -94,9 +123,9 @@ test('787 has white fuselage, red tail, windows, two underslung nacelles and no 
   const { jet, flame, exhaustDisk } = aircraft;
   const color = new THREE.Color();
   jet.getObjectByName('fuselage').getColorAt(0, color);
-  assert.equal(color.getHexString(), 'f8f7f2');
+  assert.equal(color.getHexString(), quantize8bit('#f8f7f2').slice(1));
   jet.getObjectByName('vertical-tails').getColorAt(0, color);
-  assert.equal(color.getHexString(), 'c8102e');
+  assert.equal(color.getHexString(), quantize8bit('#c8102e').slice(1));
   assert.equal(jet.userData.engineCount, 2);
   const nacelles = instances(jet.getObjectByName('engines'));
   assert.ok(nacelles.some(({ position }) => position.x < -8 && position.y < -3));
