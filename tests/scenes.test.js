@@ -76,6 +76,23 @@ test('Himeji and Yokohama include richer landmark detail with proportional ancho
   assert.ok(tower.size[1] === 37);
 });
 
+test('geodata town blocks leave existing landmark footprints clear', () => {
+  for (const id of ['himeji', 'yokohama']) {
+    const { blocks } = getScene(id);
+    const townBlocks = blocks.filter(({ name }) => name === 'Geodata city block' || name === 'Geodata castle town block');
+    const landmarks = blocks.filter(({ name }) => !name.startsWith('Geodata ') && name !== 'Building' && name !== 'Building roof');
+    assert.ok(townBlocks.length > 0, `${id} retains geodata town blocks`);
+    assert.ok(landmarks.length > 0, `${id} retains landmarks`);
+    for (const town of townBlocks) for (const landmark of landmarks) {
+      assert.ok(
+        Math.abs(town.position[0] - landmark.position[0]) >= (town.size[0] + landmark.size[0]) / 2 ||
+        Math.abs(town.position[2] - landmark.position[2]) >= (town.size[2] + landmark.size[2]) / 2,
+        `${id} town block at ${town.position} overlaps ${landmark.name}`,
+      );
+    }
+  }
+});
+
 for (const scene of SCENES) {
   test(`${scene.name}: scene-local route safely completes all eight gates`, () => {
     const flight = new FlightModel(scene.id);
