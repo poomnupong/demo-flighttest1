@@ -101,11 +101,13 @@ test('colliding Yokohama landmarks use sourced coordinates instead of displacing
   }
 });
 
-test('geodata town blocks leave existing landmark footprints clear', () => {
+test('geodata town blocks leave hand-authored and sourced landmark footprints clear', () => {
   for (const id of ['himeji', 'yokohama']) {
     const { blocks } = getScene(id);
     const townBlocks = blocks.filter(({ name }) => name === 'Geodata city block' || name === 'Geodata castle town block');
-    const landmarks = blocks.filter(({ name }) => !name.startsWith('Geodata ') && name !== 'Building' && name !== 'Building roof');
+    const landmarks = blocks.filter(({ name }) => !name.startsWith('Geodata road ') &&
+      name !== 'Geodata city block' && name !== 'Geodata castle town block' &&
+      name !== 'Building' && name !== 'Building roof');
     assert.ok(townBlocks.length > 0, `${id} retains geodata town blocks`);
     assert.ok(landmarks.length > 0, `${id} retains landmarks`);
     for (const town of townBlocks) for (const landmark of landmarks) {
@@ -116,6 +118,18 @@ test('geodata town blocks leave existing landmark footprints clear', () => {
       );
     }
   }
+});
+
+test('Nippon Maru park retains its sourced footprint without overlapping town fills', () => {
+  const { blocks } = getScene('yokohama');
+  const park = GEODATA_OVERLAYS.overlays.yokohama.find(({ name }) => name === 'Geodata Nippon Maru park');
+  const renderedPark = blocks.find(({ name }) => name === park.name);
+  assert.equal(renderedPark.position[0], park.x);
+  assert.equal(renderedPark.position[2], park.z);
+  assert.equal(renderedPark.size[0], park.w);
+  assert.equal(renderedPark.size[2], park.d);
+  assert.ok(!blocks.some(({ name, position }) =>
+    name === 'Geodata city block' && position[0] === -780 && position[2] === -2820));
 });
 
 for (const scene of SCENES) {

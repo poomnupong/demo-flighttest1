@@ -219,11 +219,14 @@ function architecture(scene) {
     for (let pier = 0; pier < 4; pier++) building(1750, -800 - pier * 950, 1100, 9, 140, 'rock', 'Harbor pier');
     for (let warehouse = 0; warehouse < 3; warehouse++) building(700, -1100 - warehouse * 170, 360, 30, 90, 'torii', 'Red Brick Warehouse');
   }
-  const landmarkBlocks = blocks.slice();
-  for (const overlay of GEODATA_OVERLAYS.overlays[scene.id] || []) {
-    if (overlay.name === 'Geodata Nippon Maru hull' || overlay.name === 'Geodata Nippon Maru deckhouse') continue;
-    const isTownBlock = overlay.name === 'Geodata city block' || overlay.name === 'Geodata castle town block';
-    if (isTownBlock && landmarkBlocks.some((block) =>
+  const overlays = (GEODATA_OVERLAYS.overlays[scene.id] || []).filter(({ name }) =>
+    name !== 'Geodata Nippon Maru hull' && name !== 'Geodata Nippon Maru deckhouse');
+  const isTownBlock = ({ name }) => name === 'Geodata city block' || name === 'Geodata castle town block';
+  const landmarkBlocks = blocks.concat(overlays
+    .filter((overlay) => !isTownBlock(overlay) && !overlay.name.startsWith('Geodata road '))
+    .map(({ x, z, w, d }) => ({ position: [x, 0, z], size: [w, 0, d] })));
+  for (const overlay of overlays) {
+    if (isTownBlock(overlay) && landmarkBlocks.some((block) =>
       Math.abs(overlay.x - block.position[0]) < (overlay.w + block.size[0]) / 2 &&
       Math.abs(overlay.z - block.position[2]) < (overlay.d + block.size[2]) / 2)) continue;
     building(overlay.x, overlay.z, overlay.w, overlay.h, overlay.d, overlay.color, overlay.name);
