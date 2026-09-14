@@ -152,20 +152,22 @@ function architecture(scene) {
     pagoda(1700, -3800, 5, 95, 'wall', 'Kyoto five-story pagoda');
     for (let index = 0; index < 16; index++) torii(-500 + index * 42, -4400);
   } else if (scene.id === 'himeji') {
-    building(-1000, -3400, 120, 10, 110, 'rock', 'Himeji stone foundation');
-    pagoda(-1000, -3400, 5, scene.landmark.height * 1.2, 'snow', 'Himeji white main keep');
-    for (const [x, z] of [[-1090, -3420], [-930, -3490], [-910, -3330]]) pagoda(x, z, 3, 27, 'snow', 'Himeji subsidiary keep');
+    const { x, z } = scene.landmark;
+    const mainKeepScale = 1.2;
+    building(x, z, 120, 10, 110, 'rock', 'Himeji stone foundation');
+    pagoda(x, z, 5, scene.landmark.height * mainKeepScale, 'snow', 'Himeji white main keep');
+    for (const [dx, dz] of [[-90, -20], [70, -90], [90, 70]]) pagoda(x + dx, z + dz, 3, 27, 'snow', 'Himeji subsidiary keep');
     for (const offset of [-490, 490]) {
-      building(-1000 + offset, -3400, 16, 22, 930, 'snow', 'Castle defensive wall');
-      building(-1000, -3400 + offset, 980, 22, 16, 'snow', 'Castle defensive wall');
+      building(x + offset, z, 16, 22, 930, 'snow', 'Castle defensive wall');
+      building(x, z + offset, 980, 22, 16, 'snow', 'Castle defensive wall');
     }
-    for (const [x, z, w, d] of [[-1000, -3400, 1260, 16], [-1000, -3400, 16, 1140], [-1000, -3400, 1540, 16], [-1000, -3400, 16, 1360]]) {
+    for (const [w, d] of [[1260, 16], [16, 1140], [1540, 16], [16, 1360]]) {
       building(x, z, w, 6, d, 'water', 'Himeji moat');
     }
     for (let row = 0; row < 4; row++) for (let col = 0; col < 6; col++) {
-      const x = -2150 + col * 460, z = -2050 + row * 420;
-      if (Math.abs(x + 1000) < 760 && Math.abs(z + 3400) < 740) continue;
-      building(x, z, 120, 14 + ((row + col) % 3) * 4, 95, 'wall', 'Himeji castle town');
+      const townX = x - 1150 + col * 460, townZ = z + 1350 + row * 420;
+      if (Math.abs(townX - x) < 760 && Math.abs(townZ - z) < 740) continue;
+      building(townX, townZ, 120, 14 + ((row + col) % 3) * 4, 95, 'wall', 'Himeji castle town');
     }
   } else if (scene.id === 'tokyo') {
     const { x, z } = scene.landmark, base = groundHeight(x, z, scene.id);
