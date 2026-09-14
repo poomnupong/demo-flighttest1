@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { SCENES, getScene, FUJI, CELL, terrainHeight, groundHeight, lakeDistance, intersectsScenery } from '../src/scenes.js';
 import { FlightModel, autopilotInput, crossedGate, ROUTE, GATE_NORMALS, GATE_RADIUS } from '../src/flight.js';
 import { createWorld } from '../src/world.js';
+import { GEODATA_OVERLAYS } from '../src/data/geodata.generated.js';
 import * as THREE from 'three';
 
 test('seven public-reference scenes expose the reusable selection contract', () => {
@@ -74,6 +75,30 @@ test('Himeji and Yokohama include richer landmark detail with proportional ancho
   assert.ok(wheel && tower);
   assert.ok(Math.abs(wheel.position[0] - 100) >= 55);
   assert.ok(tower.size[1] === 37);
+});
+
+test('colliding Yokohama landmarks use sourced coordinates instead of displacing city blocks', () => {
+  const scene = getScene('yokohama');
+  const overlays = GEODATA_OVERLAYS.overlays.yokohama;
+  const ship = overlays.find(({ name }) => name === 'Geodata Nippon Maru hull');
+  const tower = overlays.find(({ name }) => name === 'Geodata Landmark Tower plaza');
+  for (const name of ['Nippon Maru hull', 'Nippon Maru deckhouse', 'Nippon Maru mast']) {
+    const parts = scene.blocks.filter((block) => block.name === name);
+    assert.equal(parts.length, 1);
+    assert.equal(parts[0].position[0], ship.x);
+    assert.equal(parts[0].position[2], ship.z);
+  }
+  assert.ok(!scene.blocks.some(({ name }) => name === 'Geodata Nippon Maru hull' || name === 'Geodata Nippon Maru deckhouse'));
+  assert.equal(scene.landmark.x, tower.x);
+  assert.equal(scene.landmark.z, tower.z);
+  for (const block of scene.blocks.filter(({ name }) => name === 'Landmark Tower stepped crown')) {
+    assert.equal(block.position[0], tower.x);
+    assert.equal(block.position[2], tower.z);
+  }
+  for (const x of [-660, -540]) {
+    assert.ok(scene.blocks.some((block) => block.name === 'Geodata city block' && block.position[0] === x && block.position[2] === -3540),
+      'city blocks at the old stylized ship position are retained');
+  }
 });
 
 test('geodata town blocks leave existing landmark footprints clear', () => {

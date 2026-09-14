@@ -7,6 +7,8 @@ export const FUJI = { x: -500, z: -5500 };
 export const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
 export const lerp = (start, end, amount) => start + (end - start) * amount;
 
+const yokohamaTower = GEODATA_OVERLAYS.overlays.yokohama.find(({ name }) => name === 'Geodata Landmark Tower plaza');
+
 const definitions = [
   { id: 'fuji', name: 'Mount Fuji', latitude: 35.3606, longitude: 138.7274,
     landmark: { name: 'Mount Fuji', height: 3776, ...FUJI }, water: 'Lake Kawaguchi',
@@ -34,7 +36,7 @@ const definitions = [
     description: 'A dense city plain with orange-white Tokyo Tower, Skytree and a broad bay.',
     references: ['https://www.tokyotower.co.jp/en.html', 'https://www.tokyo-skytree.jp/en/'] },
   { id: 'yokohama', name: 'Yokohama', latitude: 35.455, longitude: 139.6317,
-    landmark: { name: 'Landmark Tower', height: 296, x: -1000, z: -3000 }, water: 'Yokohama harbor',
+    landmark: { name: 'Landmark Tower', height: 296, x: yokohamaTower.x, z: yokohamaTower.z }, water: 'Yokohama harbor',
     description: 'Minato Mirai skyline with Landmark Tower, Nippon Maru, Yamashita Park, Osan Pier and Cosmo Clock.',
     references: ['https://www.yokohama-landmark.jp/', 'https://www.senyo.co.jp/cosmo/', 'https://www.nippon-maru.or.jp/english/', 'https://www.welcome.city.yokohama.jp/spot/details.php?bbid=190', 'https://osanbashi.jp/en/'] },
 ];
@@ -205,10 +207,11 @@ function architecture(scene) {
       for (let step = 1; step < 7; step++) add(wx + Math.cos(angle) * step * 8, wy + Math.sin(angle) * step * 8, wz, 3, 3, 3, 'wall', 'Cosmo Clock spoke');
     }
     add(wx, wy - 27, wz, 10, 58, 10, 'wall', 'Cosmo Clock support');
-    const shipBase = groundHeight(-650, -3560, scene.id);
-    add(-650, shipBase + 4, -3560, 230, 8, 34, 'snow', 'Nippon Maru hull');
-    add(-650, shipBase + 14, -3560, 170, 12, 26, 'wall', 'Nippon Maru deckhouse');
-    add(-650, shipBase + 40, -3560, 8, 64, 8, 'torii', 'Nippon Maru mast');
+    const ship = GEODATA_OVERLAYS.overlays.yokohama.find(({ name }) => name === 'Geodata Nippon Maru hull');
+    const shipBase = groundHeight(ship.x, ship.z, scene.id);
+    add(ship.x, shipBase + 4, ship.z, 230, 8, 34, 'snow', 'Nippon Maru hull');
+    add(ship.x, shipBase + 14, ship.z, 170, 12, 26, 'wall', 'Nippon Maru deckhouse');
+    add(ship.x, shipBase + 40, ship.z, 8, 64, 8, 'torii', 'Nippon Maru mast');
     building(1750, -1650, 980, 4, 260, 'grass-light', 'Yamashita Park lawn');
     building(1750, -1515, 980, 3, 34, 'wall', 'Yamashita Park promenade');
     building(2230, -1880, 1250, 8, 260, 'rock', 'Osan Pier deck');
@@ -218,6 +221,7 @@ function architecture(scene) {
   }
   const landmarkBlocks = blocks.slice();
   for (const overlay of GEODATA_OVERLAYS.overlays[scene.id] || []) {
+    if (overlay.name === 'Geodata Nippon Maru hull' || overlay.name === 'Geodata Nippon Maru deckhouse') continue;
     const isTownBlock = overlay.name === 'Geodata city block' || overlay.name === 'Geodata castle town block';
     if (isTownBlock && landmarkBlocks.some((block) =>
       Math.abs(overlay.x - block.position[0]) < (overlay.w + block.size[0]) / 2 &&

@@ -63,6 +63,8 @@ Landmark identity, key dimensions, and silhouettes are based on the following pu
 
 The repository now includes an offline geodata pipeline in [`scripts/fetch-geodata.mjs`](scripts/fetch-geodata.mjs) and [`scripts/build-geodata.mjs`](scripts/build-geodata.mjs), which ingests public geospatial snapshots (Who's On First district polygons and public POI coordinate datasets) and generates `src/data/geodata.generated.js` for richer city blocks and road-like overlays.
 
+Yokohama's Landmark Tower and Nippon Maru use the sourced POI positions rather than their earlier stylized placement. The surrounding geodata city blocks are synthetic fills within district polygons, not surveyed building footprints; overlapping fills are omitted without moving these landmarks away from their sourced coordinates.
+
 Aircraft length/span references: [USAF F-35A](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/478441/f-35a-lightning-ii/), [USAF F-22](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104506/f-22-raptor/), and [JAL Boeing 787-8](https://www.jal.co.jp/en/aircraft/conf/787.html). Automatic daylight uses the [NOAA approximate solar equations](https://gml.noaa.gov/grad/solcalc/solareqns.PDF); it does not account for terrain-obstructed sunrise or local weather.
 
 ## Development
