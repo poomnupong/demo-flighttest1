@@ -122,7 +122,7 @@ test('misplaced Yokohama landmarks are discarded rather than displacing sourced 
       );
     }
   }
-  for (const [x, y, z] of [[100, 200, -3300], [1750, 40, -1650], [2390, 48, -1880], [1750, 42, -2700]]) {
+  for (const [x, y, z] of [[156, 128, -3300], [1750, 40, -1650], [2390, 48, -1880], [1750, 42, -2700]]) {
     const point = { x, y, z };
     assert.equal(intersectsScenery(point, point, 'yokohama', 0), false, 'removed landmarks leave no ghost colliders');
   }
