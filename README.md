@@ -59,11 +59,13 @@ Landmark identity, key dimensions, and silhouettes are based on the following pu
 | Kyoto | [Three-story Golden Pavilion](https://www.japan.travel/en/spot/1152/), pagoda, torii avenue and mountain basin |
 | Himeji | [White Heron Castle](https://www.city.himeji.lg.jp/castle/), tiered keep, ramparts, concentric moat and surrounding castle-town blocks |
 | Tokyo | [333 m Tokyo Tower](https://www.tokyotower.co.jp/en.html), [634 m Skytree](https://www.tokyo-skytree.jp/en/), city blocks, river and bay |
-| Yokohama | [Landmark Tower](https://www.yokohamajapan.com/things-to-do/detail.php?bbid=183), sail-shaped hotel, [Cosmo Clock Ferris wheel](https://www.senyo.co.jp/cosmo/), Nippon Maru, Yamashita Park, Osan Pier, red-brick warehouses and harbor |
+| Yokohama | [Landmark Tower](https://www.yokohamajapan.com/things-to-do/detail.php?bbid=183), sail-shaped hotel, Nippon Maru, sourced Yamashita Park, Osanbashi and [Cosmo World](https://www.senyo.co.jp/cosmo/) footprints, red-brick warehouses and harbor |
 
 The repository now includes an offline geodata pipeline in [`scripts/fetch-geodata.mjs`](scripts/fetch-geodata.mjs) and [`scripts/build-geodata.mjs`](scripts/build-geodata.mjs), which ingests public geospatial snapshots (Who's On First district polygons and public POI coordinate datasets) and generates `src/data/geodata.generated.js` for richer city blocks and road-like overlays.
 
 Yokohama's Landmark Tower and Nippon Maru use the sourced POI positions rather than their earlier stylized placement. The surrounding geodata city blocks are synthetic fills within district polygons, not surveyed building footprints; overlapping fills are omitted without moving these landmarks away from their sourced coordinates.
+
+The misplaced hand-authored Yamashita Park, Osan Pier and Cosmo Clock models have been discarded, along with the schematic harbor pier that conflicted with the sourced Osanbashi deck. Their sourced map artifacts remain unchanged; detailed landmark models can be rebuilt later at verified locations.
 
 Aircraft length/span references: [USAF F-35A](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/478441/f-35a-lightning-ii/), [USAF F-22](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104506/f-22-raptor/), and [JAL Boeing 787-8](https://www.jal.co.jp/en/aircraft/conf/787.html). Automatic daylight uses the [NOAA approximate solar equations](https://gml.noaa.gov/grad/solcalc/solareqns.PDF); it does not account for terrain-obstructed sunrise or local weather.
 

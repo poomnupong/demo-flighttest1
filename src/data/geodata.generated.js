@@ -1,6 +1,6 @@
 export const GEODATA_OVERLAYS = {
   "metadata": {
-    "generatedAt": "2026-09-14T06:31:49.412Z",
+    "generatedAt": "2026-09-14T07:45:02.994Z",
     "sources": [
       "Who's On First admin-jp (Minatomirai and Himeji polygons)",
       "japan-travel-mcp batch prompt snapshot (Wikidata-derived POI coordinates)",
@@ -4659,19 +4659,37 @@ export const GEODATA_OVERLAYS = {
       },
       {
         "x": -1000,
-        "z": -3400,
-        "w": 1100,
+        "z": -3875,
+        "w": 1120,
         "h": 5,
         "d": 20,
         "color": "water",
         "name": "Geodata Himeji moat ring"
       },
       {
-        "x": -1000,
+        "x": -1550,
         "z": -3400,
         "w": 20,
         "h": 5,
-        "d": 950,
+        "d": 930,
+        "color": "water",
+        "name": "Geodata Himeji moat ring"
+      },
+      {
+        "x": -1000,
+        "z": -2925,
+        "w": 1120,
+        "h": 5,
+        "d": 20,
+        "color": "water",
+        "name": "Geodata Himeji moat ring"
+      },
+      {
+        "x": -450,
+        "z": -3400,
+        "w": 20,
+        "h": 5,
+        "d": 930,
         "color": "water",
         "name": "Geodata Himeji moat ring"
       }
