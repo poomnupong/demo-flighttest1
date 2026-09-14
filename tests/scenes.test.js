@@ -65,15 +65,13 @@ test('Himeji and Yokohama include richer landmark detail with proportional ancho
   assert.ok(himeji.blocks.some(({ name }) => name === 'Himeji castle town'));
   assert.ok(himejiKeep && himejiSubsidiary);
   assert.ok(himejiKeep.size[1] > himejiSubsidiary.size[1]);
-  for (const landmark of ['Nippon Maru hull', 'Yamashita Park lawn', 'Osan Pier deck', 'Cosmo Clock gondola']) {
+  for (const landmark of ['Nippon Maru hull', 'Geodata Yamashita Park lawn', 'Geodata Osanbashi deck', 'Geodata Cosmo World plaza']) {
     assert.ok(yokohama.blocks.some(({ name }) => name === landmark), `${landmark} exists`);
   }
   assert.ok(yokohama.blocks.some(({ name }) => name.startsWith('Geodata road')), 'Yokohama geodata roads exist');
   assert.ok(himeji.blocks.some(({ name }) => name.startsWith('Geodata castle town block')), 'Himeji geodata town blocks exist');
-  const wheel = yokohama.blocks.find(({ name }) => name === 'Cosmo Clock gondola');
   const tower = yokohama.blocks.find(({ name }) => name === 'Landmark Tower stepped crown');
-  assert.ok(wheel && tower);
-  assert.ok(Math.abs(wheel.position[0] - 100) >= 55);
+  assert.ok(tower);
   assert.ok(tower.size[1] === 37);
 });
 
@@ -98,6 +96,33 @@ test('colliding Yokohama landmarks use sourced coordinates instead of displacing
   for (const x of [-660, -540]) {
     assert.ok(scene.blocks.some((block) => block.name === 'Geodata city block' && block.position[0] === x && block.position[2] === -3540),
       'city blocks at the old stylized ship position are retained');
+  }
+});
+
+test('misplaced Yokohama landmarks are discarded rather than displacing sourced artifacts', () => {
+  const { blocks } = getScene('yokohama');
+  for (const prefix of ['Yamashita Park ', 'Osan Pier ', 'Cosmo Clock ', 'Harbor pier']) {
+    assert.ok(!blocks.some(({ name }) => name.startsWith(prefix)), `${prefix} placeholder is removed`);
+  }
+  for (const name of ['Geodata Yamashita Park lawn', 'Geodata Osanbashi deck', 'Geodata Osanbashi terminal', 'Geodata Cosmo World plaza']) {
+    const overlay = GEODATA_OVERLAYS.overlays.yokohama.find((entry) => entry.name === name);
+    const matches = blocks.filter((block) => block.name === name);
+    assert.equal(matches.length, 1, `${name} has one representation`);
+    const [block] = matches;
+    assert.deepEqual(block.position, [overlay.x, groundHeight(overlay.x, overlay.z, 'yokohama') + overlay.h / 2, overlay.z]);
+    assert.deepEqual(block.size, [overlay.w, overlay.h, overlay.d]);
+    assert.equal(block.color, overlay.color);
+    for (const legacy of blocks.filter(({ name }) => !name.startsWith('Geodata '))) {
+      assert.ok(
+        Math.abs(block.position[0] - legacy.position[0]) >= (block.size[0] + legacy.size[0]) / 2 ||
+        Math.abs(block.position[2] - legacy.position[2]) >= (block.size[2] + legacy.size[2]) / 2,
+        `${name} overlaps ${legacy.name}`,
+      );
+    }
+  }
+  for (const [x, y, z] of [[100, 200, -3300], [1750, 40, -1750], [2390, 48, -1880]]) {
+    const point = { x, y, z };
+    assert.equal(intersectsScenery(point, point, 'yokohama', 0), false, 'removed landmarks leave no ghost colliders');
   }
 });
 
