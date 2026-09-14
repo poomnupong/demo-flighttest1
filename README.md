@@ -57,9 +57,9 @@ Landmark identity, key dimensions, and silhouettes are based on the following pu
 | Kamakura / Enoshima | Island, causeway, [Sea Candle observation lighthouse](https://enoshima-seacandle.com/), [seated Great Buddha](https://www.city.kamakura.kanagawa.jp/english/buddha.html) |
 | Japan Alps / Nagano | Northern Alps and river valley, [Matsumoto's black castle](https://www.matsumoto-castle.jp/lang/eng/) |
 | Kyoto | [Three-story Golden Pavilion](https://www.japan.travel/en/spot/1152/), pagoda, torii avenue and mountain basin |
-| Himeji | [White Heron Castle](https://www.city.himeji.lg.jp/castle/), tiered keep, walls and moat |
+| Himeji | [White Heron Castle](https://www.city.himeji.lg.jp/castle/), tiered keep, ramparts, concentric moat and surrounding castle-town blocks |
 | Tokyo | [333 m Tokyo Tower](https://www.tokyotower.co.jp/en.html), [634 m Skytree](https://www.tokyo-skytree.jp/en/), city blocks, river and bay |
-| Yokohama | [Landmark Tower](https://www.yokohamajapan.com/things-to-do/detail.php?bbid=183), sail-shaped hotel, [Cosmo Clock Ferris wheel](https://www.senyo.co.jp/cosmo/), red-brick warehouses and harbor |
+| Yokohama | [Landmark Tower](https://www.yokohamajapan.com/things-to-do/detail.php?bbid=183), sail-shaped hotel, [Cosmo Clock Ferris wheel](https://www.senyo.co.jp/cosmo/), Nippon Maru, Yamashita Park, Osan Pier, red-brick warehouses and harbor |
 
 Aircraft length/span references: [USAF F-35A](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/478441/f-35a-lightning-ii/), [USAF F-22](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104506/f-22-raptor/), and [JAL Boeing 787-8](https://www.jal.co.jp/en/aircraft/conf/787.html). Automatic daylight uses the [NOAA approximate solar equations](https://gml.noaa.gov/grad/solcalc/solareqns.PDF); it does not account for terrain-obstructed sunrise or local weather.
 

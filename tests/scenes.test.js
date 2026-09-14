@@ -55,6 +55,25 @@ test('terrain and water match each region rather than reusing the Fuji cone', ()
   }
 });
 
+test('Himeji and Yokohama include richer landmark detail with proportional anchors', () => {
+  const himeji = getScene('himeji');
+  const yokohama = getScene('yokohama');
+  const himejiKeep = himeji.blocks.find(({ name }) => name === 'Himeji white main keep');
+  const himejiSubsidiary = himeji.blocks.find(({ name }) => name === 'Himeji subsidiary keep');
+  assert.ok(himeji.blocks.some(({ name }) => name === 'Himeji moat'));
+  assert.ok(himeji.blocks.some(({ name }) => name === 'Himeji castle town'));
+  assert.ok(himejiKeep && himejiSubsidiary);
+  assert.ok(himejiKeep.size[1] > himejiSubsidiary.size[1]);
+  for (const landmark of ['Nippon Maru hull', 'Yamashita Park lawn', 'Osan Pier deck', 'Cosmo Clock gondola']) {
+    assert.ok(yokohama.blocks.some(({ name }) => name === landmark), `${landmark} exists`);
+  }
+  const wheel = yokohama.blocks.find(({ name }) => name === 'Cosmo Clock gondola');
+  const tower = yokohama.blocks.find(({ name }) => name === 'Landmark Tower stepped crown');
+  assert.ok(wheel && tower);
+  assert.ok(Math.abs(wheel.position[0] - 100) >= 55);
+  assert.ok(tower.size[1] === 37);
+});
+
 for (const scene of SCENES) {
   test(`${scene.name}: scene-local route safely completes all eight gates`, () => {
     const flight = new FlightModel(scene.id);

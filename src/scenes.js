@@ -25,16 +25,16 @@ const definitions = [
     references: ['https://www.shokoku-ji.jp/en/kinkakuji/', 'https://www.japan.travel/en/spot/1152/'] },
   { id: 'himeji', name: 'Himeji', latitude: 34.8394, longitude: 134.6939,
     landmark: { name: 'Himeji Castle', height: 46.4, x: -1000, z: -3400 }, water: 'Castle moat',
-    description: 'White Heron Castle’s tiered white keep, defensive walls and moat on a coastal plain.',
-    references: ['https://www.city.himeji.lg.jp/castle/'] },
+    description: 'White Heron Castle’s tiered keep, stone ramparts, concentric moats and castle-town plain.',
+    references: ['https://www.city.himeji.lg.jp/castle/', 'https://whc.unesco.org/en/list/661/'] },
   { id: 'tokyo', name: 'Tokyo', latitude: 35.6586, longitude: 139.7454,
     landmark: { name: 'Tokyo Tower', height: 333, x: -1500, z: -3000 }, water: 'Tokyo Bay / Sumida River',
     description: 'A dense city plain with orange-white Tokyo Tower, Skytree and a broad bay.',
     references: ['https://www.tokyotower.co.jp/en.html', 'https://www.tokyo-skytree.jp/en/'] },
   { id: 'yokohama', name: 'Yokohama', latitude: 35.455, longitude: 139.6317,
     landmark: { name: 'Landmark Tower', height: 296, x: -1000, z: -3000 }, water: 'Yokohama harbor',
-    description: 'Minato Mirai’s stepped tower, sail-shaped hotel, block Ferris wheel and harbor piers.',
-    references: ['https://www.yokohama-landmark.jp/', 'https://www.senyo.co.jp/cosmo/'] },
+    description: 'Minato Mirai skyline with Landmark Tower, Nippon Maru, Yamashita Park, Osan Pier and Cosmo Clock.',
+    references: ['https://www.yokohama-landmark.jp/', 'https://www.senyo.co.jp/cosmo/', 'https://www.nippon-maru.or.jp/english/', 'https://www.welcome.city.yokohama.jp/spot/details.php?bbid=190', 'https://osanbashi.jp/en/'] },
 ];
 
 function definition(id) {
@@ -61,7 +61,8 @@ export function terrainHeight(x, z, sceneId = 'fuji') {
   const lake = lakeDistance(x, z, sceneId);
   const rolling = 130 + 105 * Math.sin(x * 0.00073 + z * 0.00024)
     + 90 * Math.cos(z * 0.00082 - x * 0.0002)
-    + 42 * Math.sin(x * 0.0019) * Math.cos(z * 0.0018);
+    + 42 * Math.sin(x * 0.0019) * Math.cos(z * 0.0018)
+    + 26 * Math.sin(x * 0.0041 + z * 0.0015) * Math.cos(z * 0.0034 - x * 0.0011);
   let height;
   if (sceneId === 'fuji') {
     const radial = Math.hypot(x - FUJI.x, z - FUJI.z);
@@ -151,12 +152,20 @@ function architecture(scene) {
     pagoda(1700, -3800, 5, 95, 'wall', 'Kyoto five-story pagoda');
     for (let index = 0; index < 16; index++) torii(-500 + index * 42, -4400);
   } else if (scene.id === 'himeji') {
-    building(-1000, -3400, 90, 7, 80, 'rock', 'Himeji stone foundation');
-    pagoda(-1000, -3400, 5, scene.landmark.height, 'snow', 'Himeji white main keep');
+    building(-1000, -3400, 120, 10, 110, 'rock', 'Himeji stone foundation');
+    pagoda(-1000, -3400, 5, scene.landmark.height * 1.2, 'snow', 'Himeji white main keep');
     for (const [x, z] of [[-1090, -3420], [-930, -3490], [-910, -3330]]) pagoda(x, z, 3, 27, 'snow', 'Himeji subsidiary keep');
     for (const offset of [-490, 490]) {
       building(-1000 + offset, -3400, 16, 22, 930, 'snow', 'Castle defensive wall');
       building(-1000, -3400 + offset, 980, 22, 16, 'snow', 'Castle defensive wall');
+    }
+    for (const [x, z, w, d] of [[-1000, -3400, 1260, 16], [-1000, -3400, 16, 1140], [-1000, -3400, 1540, 16], [-1000, -3400, 16, 1360]]) {
+      building(x, z, w, 6, d, 'water', 'Himeji moat');
+    }
+    for (let row = 0; row < 4; row++) for (let col = 0; col < 6; col++) {
+      const x = -2150 + col * 460, z = -2050 + row * 420;
+      if (Math.abs(x + 1000) < 760 && Math.abs(z + 3400) < 740) continue;
+      building(x, z, 120, 14 + ((row + col) % 3) * 4, 95, 'wall', 'Himeji castle town');
     }
   } else if (scene.id === 'tokyo') {
     const { x, z } = scene.landmark, base = groundHeight(x, z, scene.id);
@@ -188,10 +197,18 @@ function architecture(scene) {
     const wx = 100, wz = -3300, wy = groundHeight(wx, wz, scene.id) + 56.25;
     for (let i = 0; i < 28; i++) {
       const angle = i / 28 * Math.PI * 2;
-      add(wx + Math.cos(angle) * 50, wy + Math.sin(angle) * 50, wz, 8, 8, 8, 'torii', 'Cosmo Clock gondola');
-      for (let step = 1; step < 6; step++) add(wx + Math.cos(angle) * step * 8, wy + Math.sin(angle) * step * 8, wz, 3, 3, 3, 'wall', 'Cosmo Clock spoke');
+      add(wx + Math.cos(angle) * 56, wy + Math.sin(angle) * 56, wz, 8, 8, 8, 'torii', 'Cosmo Clock gondola');
+      for (let step = 1; step < 7; step++) add(wx + Math.cos(angle) * step * 8, wy + Math.sin(angle) * step * 8, wz, 3, 3, 3, 'wall', 'Cosmo Clock spoke');
     }
     add(wx, wy - 27, wz, 10, 58, 10, 'wall', 'Cosmo Clock support');
+    const shipBase = groundHeight(-650, -3560, scene.id);
+    add(-650, shipBase + 4, -3560, 230, 8, 34, 'snow', 'Nippon Maru hull');
+    add(-650, shipBase + 14, -3560, 170, 12, 26, 'wall', 'Nippon Maru deckhouse');
+    add(-650, shipBase + 40, -3560, 8, 64, 8, 'torii', 'Nippon Maru mast');
+    building(1750, -1650, 980, 4, 260, 'grass-light', 'Yamashita Park lawn');
+    building(1750, -1515, 980, 3, 34, 'wall', 'Yamashita Park promenade');
+    building(2230, -1880, 1250, 8, 260, 'rock', 'Osan Pier deck');
+    building(2390, -1880, 110, 14, 250, 'wall', 'Osan Pier terminal');
     for (let pier = 0; pier < 4; pier++) building(1750, -800 - pier * 950, 1100, 9, 140, 'rock', 'Harbor pier');
     for (let warehouse = 0; warehouse < 3; warehouse++) building(700, -1100 - warehouse * 170, 360, 30, 90, 'torii', 'Red Brick Warehouse');
   }
