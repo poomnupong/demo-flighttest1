@@ -75,6 +75,25 @@ test('Himeji and Yokohama include richer landmark detail with proportional ancho
   assert.ok(tower.size[1] === 37);
 });
 
+test('Himeji moat rings surround the castle instead of crossing its keeps', () => {
+  const { blocks, landmark } = getScene('himeji');
+  const keeps = blocks.filter(({ name }) => ['Himeji stone foundation', 'Himeji white main keep', 'Himeji subsidiary keep'].includes(name));
+  for (const [name, count] of [['Himeji moat', 8], ['Geodata Himeji moat ring', 4]]) {
+    const moats = blocks.filter((block) => block.name === name);
+    assert.equal(moats.length, count);
+    for (const moat of moats) for (const keep of keeps) {
+      assert.ok(
+        Math.abs(moat.position[0] - keep.position[0]) >= (moat.size[0] + keep.size[0]) / 2 ||
+        Math.abs(moat.position[2] - keep.position[2]) >= (moat.size[2] + keep.size[2]) / 2,
+        `${name} crosses ${keep.name}`,
+      );
+    }
+    for (const axis of [0, 2]) for (const side of [-1, 1]) {
+      assert.equal(moats.filter(({ position }) => Math.sign(position[axis] - (axis === 0 ? landmark.x : landmark.z)) === side).length, count / 4);
+    }
+  }
+});
+
 test('colliding Yokohama landmarks use sourced coordinates instead of displacing city blocks', () => {
   const scene = getScene('yokohama');
   const overlays = GEODATA_OVERLAYS.overlays.yokohama;

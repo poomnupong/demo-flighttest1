@@ -165,10 +165,12 @@ yokohamaOverlays.push(
 );
 
 const himejiAnchor = metersToWorld(SCENES.himeji, 34.8394, 134.6939);
-himejiOverlays.push(
-  { x: himejiAnchor[0], z: himejiAnchor[1], w: 1100, h: 5, d: 20, color: 'water', name: 'Geodata Himeji moat ring' },
-  { x: himejiAnchor[0], z: himejiAnchor[1], w: 20, h: 5, d: 950, color: 'water', name: 'Geodata Himeji moat ring' },
-);
+for (const side of [-1, 1]) {
+  himejiOverlays.push(
+    { x: himejiAnchor[0], z: himejiAnchor[1] + side * 475, w: 1120, h: 5, d: 20, color: 'water', name: 'Geodata Himeji moat ring' },
+    { x: himejiAnchor[0] + side * 550, z: himejiAnchor[1], w: 20, h: 5, d: 930, color: 'water', name: 'Geodata Himeji moat ring' },
+  );
+}
 
 const output = {
   metadata: {

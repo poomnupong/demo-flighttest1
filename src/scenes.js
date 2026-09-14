@@ -165,8 +165,11 @@ function architecture(scene) {
       building(x + offset, z, 16, 22, 930, 'snow', 'Castle defensive wall');
       building(x, z + offset, 980, 22, 16, 'snow', 'Castle defensive wall');
     }
-    for (const [w, d] of [[1260, 16], [16, 1140], [1540, 16], [16, 1360]]) {
-      building(x, z, w, 6, d, 'water', 'Himeji moat');
+    for (const [w, d] of [[1260, 1140], [1540, 1360]]) {
+      for (const side of [-1, 1]) {
+        building(x, z + side * d / 2, w + 16, 6, 16, 'water', 'Himeji moat');
+        building(x + side * w / 2, z, 16, 6, d - 16, 'water', 'Himeji moat');
+      }
     }
     for (let row = 0; row < 4; row++) for (let col = 0; col < 6; col++) {
       const townX = x - 1150 + col * 460, townZ = z + 450 + row * 420;
