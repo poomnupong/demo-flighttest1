@@ -205,6 +205,7 @@ function architecture(scene) {
     add(ship.x, shipBase + 4, ship.z, 230, 8, 34, 'snow', 'Nippon Maru hull');
     add(ship.x, shipBase + 14, ship.z, 170, 12, 26, 'wall', 'Nippon Maru deckhouse');
     add(ship.x, shipBase + 40, ship.z, 8, 64, 8, 'torii', 'Nippon Maru mast');
+    for (const pierZ of [-800, -1750, -3650]) building(1750, pierZ, 1100, 9, 140, 'rock', 'Harbor pier');
     for (let warehouse = 0; warehouse < 3; warehouse++) building(700, -1100 - warehouse * 170, 360, 30, 90, 'torii', 'Red Brick Warehouse');
   }
   const overlays = (GEODATA_OVERLAYS.overlays[scene.id] || []).filter(({ name }) =>

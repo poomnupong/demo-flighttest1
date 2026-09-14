@@ -65,7 +65,7 @@ The repository now includes an offline geodata pipeline in [`scripts/fetch-geoda
 
 Yokohama's Landmark Tower and Nippon Maru use the sourced POI positions rather than their earlier stylized placement. The surrounding geodata city blocks are synthetic fills within district polygons, not surveyed building footprints; overlapping fills are omitted without moving these landmarks away from their sourced coordinates.
 
-The misplaced hand-authored Yamashita Park, Osan Pier and Cosmo Clock models have been discarded, along with schematic harbor piers that conflicted with the sourced Osanbashi deck. Their sourced map artifacts remain unchanged; detailed landmark models can be rebuilt later at verified locations.
+The misplaced hand-authored Yamashita Park, Osan Pier and Cosmo Clock models have been discarded, along with the schematic harbor pier that conflicted with the sourced Osanbashi deck. Their sourced map artifacts remain unchanged; detailed landmark models can be rebuilt later at verified locations.
 
 Aircraft length/span references: [USAF F-35A](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/478441/f-35a-lightning-ii/), [USAF F-22](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104506/f-22-raptor/), and [JAL Boeing 787-8](https://www.jal.co.jp/en/aircraft/conf/787.html). Automatic daylight uses the [NOAA approximate solar equations](https://gml.noaa.gov/grad/solcalc/solareqns.PDF); it does not account for terrain-obstructed sunrise or local weather.
 

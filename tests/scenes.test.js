@@ -101,9 +101,11 @@ test('colliding Yokohama landmarks use sourced coordinates instead of displacing
 
 test('misplaced Yokohama landmarks are discarded rather than displacing sourced artifacts', () => {
   const { blocks } = getScene('yokohama');
-  for (const prefix of ['Yamashita Park ', 'Osan Pier ', 'Cosmo Clock ', 'Harbor pier']) {
+  for (const prefix of ['Yamashita Park ', 'Osan Pier ', 'Cosmo Clock ']) {
     assert.ok(!blocks.some(({ name }) => name.startsWith(prefix)), `${prefix} placeholder is removed`);
   }
+  assert.deepEqual(blocks.filter(({ name }) => name === 'Harbor pier').map(({ position }) => position[2]),
+    [-800, -1750, -3650], 'only the harbor pier conflicting with sourced Osanbashi is removed');
   for (const name of ['Geodata Yamashita Park lawn', 'Geodata Osanbashi deck', 'Geodata Osanbashi terminal', 'Geodata Cosmo World plaza']) {
     const overlay = GEODATA_OVERLAYS.overlays.yokohama.find((entry) => entry.name === name);
     const matches = blocks.filter((block) => block.name === name);
@@ -120,7 +122,7 @@ test('misplaced Yokohama landmarks are discarded rather than displacing sourced 
       );
     }
   }
-  for (const [x, y, z] of [[100, 200, -3300], [1750, 40, -1750], [2390, 48, -1880]]) {
+  for (const [x, y, z] of [[100, 200, -3300], [1750, 40, -1650], [2390, 48, -1880], [1750, 42, -2700]]) {
     const point = { x, y, z };
     assert.equal(intersectsScenery(point, point, 'yokohama', 0), false, 'removed landmarks leave no ghost colliders');
   }
