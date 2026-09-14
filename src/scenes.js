@@ -165,7 +165,7 @@ function architecture(scene) {
       building(x, z, w, 6, d, 'water', 'Himeji moat');
     }
     for (let row = 0; row < 4; row++) for (let col = 0; col < 6; col++) {
-      const townX = x - 1150 + col * 460, townZ = z + 1350 + row * 420;
+      const townX = x - 1150 + col * 460, townZ = z + 450 + row * 420;
       if (Math.abs(townX - x) < 760 && Math.abs(townZ - z) < 740) continue;
       building(townX, townZ, 120, 14 + ((row + col) % 3) * 4, 95, 'wall', 'Himeji castle town');
     }
