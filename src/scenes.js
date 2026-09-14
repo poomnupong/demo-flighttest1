@@ -1,3 +1,5 @@
+import { GEODATA_OVERLAYS } from './data/geodata.generated.js';
+
 export const CELL = 100;
 export const EXTENT = 12000;
 export const WATER_LEVEL = 38;
@@ -213,6 +215,9 @@ function architecture(scene) {
     building(2390, -1880, 110, 14, 250, 'wall', 'Osan Pier terminal');
     for (let pier = 0; pier < 4; pier++) building(1750, -800 - pier * 950, 1100, 9, 140, 'rock', 'Harbor pier');
     for (let warehouse = 0; warehouse < 3; warehouse++) building(700, -1100 - warehouse * 170, 360, 30, 90, 'torii', 'Red Brick Warehouse');
+  }
+  for (const overlay of GEODATA_OVERLAYS.overlays[scene.id] || []) {
+    building(overlay.x, overlay.z, overlay.w, overlay.h, overlay.d, overlay.color, overlay.name);
   }
   const urban = scene.id === 'tokyo' || scene.id === 'yokohama';
   for (let index = 0; index < (urban ? 420 : 90); index++) {

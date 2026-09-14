@@ -61,6 +61,8 @@ Landmark identity, key dimensions, and silhouettes are based on the following pu
 | Tokyo | [333 m Tokyo Tower](https://www.tokyotower.co.jp/en.html), [634 m Skytree](https://www.tokyo-skytree.jp/en/), city blocks, river and bay |
 | Yokohama | [Landmark Tower](https://www.yokohamajapan.com/things-to-do/detail.php?bbid=183), sail-shaped hotel, [Cosmo Clock Ferris wheel](https://www.senyo.co.jp/cosmo/), Nippon Maru, Yamashita Park, Osan Pier, red-brick warehouses and harbor |
 
+The repository now includes an offline geodata pipeline in [`scripts/fetch-geodata.mjs`](scripts/fetch-geodata.mjs) and [`scripts/build-geodata.mjs`](scripts/build-geodata.mjs), which ingests public geospatial snapshots (Who's On First district polygons and public POI coordinate datasets) and generates `src/data/geodata.generated.js` for richer city blocks and road-like overlays.
+
 Aircraft length/span references: [USAF F-35A](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/478441/f-35a-lightning-ii/), [USAF F-22](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104506/f-22-raptor/), and [JAL Boeing 787-8](https://www.jal.co.jp/en/aircraft/conf/787.html). Automatic daylight uses the [NOAA approximate solar equations](https://gml.noaa.gov/grad/solcalc/solareqns.PDF); it does not account for terrain-obstructed sunrise or local weather.
 
 ## Development
@@ -69,6 +71,7 @@ Requires Node.js 22 or newer for rebuilding only.
 
 ```sh
 npm ci
+npm run geodata:update
 npm run check
 npm test
 npm run build

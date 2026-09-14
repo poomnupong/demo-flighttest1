@@ -67,6 +67,8 @@ test('Himeji and Yokohama include richer landmark detail with proportional ancho
   for (const landmark of ['Nippon Maru hull', 'Yamashita Park lawn', 'Osan Pier deck', 'Cosmo Clock gondola']) {
     assert.ok(yokohama.blocks.some(({ name }) => name === landmark), `${landmark} exists`);
   }
+  assert.ok(yokohama.blocks.some(({ name }) => name.startsWith('Geodata road')), 'Yokohama geodata roads exist');
+  assert.ok(himeji.blocks.some(({ name }) => name.startsWith('Geodata castle town block')), 'Himeji geodata town blocks exist');
   const wheel = yokohama.blocks.find(({ name }) => name === 'Cosmo Clock gondola');
   const tower = yokohama.blocks.find(({ name }) => name === 'Landmark Tower stepped crown');
   assert.ok(wheel && tower);
