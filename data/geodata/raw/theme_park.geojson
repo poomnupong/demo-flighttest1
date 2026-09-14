@@ -1,0 +1,703 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "サンリオピューロランド"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.4294748,
+                    35.6245957
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.3840474,
+                    35.7864383
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "八景島シーパラダイス"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.6467663,
+                    35.3360646
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "大阪府民牧場"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    135.4016822,
+                    34.9525878
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "舞鶴ふるるファーム"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    135.3472386,
+                    35.5373414
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "ナゴパイナップルパーク (Nago Pineapple Park)"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    127.9695476,
+                    26.6159998
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "伝承園"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    141.570065,
+                    39.3581733
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "よこはまコスモワールド (Yokohama Cosmo World)"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.6369841,
+                    35.4551203
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "オオムラサキ自然公園"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    138.3899838,
+                    35.7952751
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "那須ハイランドパーク"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.9639431,
+                    37.0648296
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "りんどう湖ファミリー牧場"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    140.0460018,
+                    37.04251
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "パチンコ&スロットa.c.t"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    135.8288275,
+                    34.6845841
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "近鉄センター"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    135.8288381,
+                    34.6846799
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "みさき公園"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    135.1621322,
+                    34.3279845
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "野球殿堂博物館"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.7520423,
+                    35.7049751
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "ディスカバリーパーク焼津"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    138.3314184,
+                    34.8226455
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "花の木総合公園"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    137.6749918,
+                    35.2142257
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "新潟ふるさと村"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.0201671,
+                    37.8662043
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "海の公園"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.6347975,
+                    35.3387111
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "寝覚の床美術公園"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    137.7009092,
+                    35.7711387
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "滑川第砂防公園"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    137.7485937,
+                    35.784921
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "八木山ベニーランド"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    140.8482894,
+                    38.2461371
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "鎌倉海浜公園"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.5434469,
+                    35.3099818
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "大崎公園"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.5590325,
+                    35.2932915
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Gundam 1:1 statue"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.7754521,
+                    35.6244149
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "メルヘン村"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    129.9746862,
+                    33.1307551
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "ハタハタ館"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.9875898,
+                    40.3862653
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "こども遊園地"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    130.2818019,
+                    33.2651437
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "東京ドームシティアトラクションズ"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.7544063,
+                    35.7036327
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "扇町キッズパーク"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    135.5102709,
+                    34.7045253
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "たけべの森公園　TAKEBEnoMORI PARK"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    133.8723599,
+                    34.8574435
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "小代「古代体験の森」"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    134.5483044,
+                    35.4644312
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "ラグナシア"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    137.2715457,
+                    34.8087885
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "東京ディズニーランド"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.8806015,
+                    35.6325808
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "パルケ・エスパーニャ"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    136.8453959,
+                    34.3618693
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "三瀬ルベール牧場どんぐり村"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    130.2737435,
+                    33.4057229
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "人吉クラフトパーク"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    130.7892846,
+                    32.1931785
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "永山コパボウル"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.4480368,
+                    35.6312514
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "東武ワルドスクエア (Tobu World Square)"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.709574,
+                    36.8078368
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "芝政ワールド"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    136.1784762,
+                    36.250529
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "ワンダーランド"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    136.1766096,
+                    36.2286665
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "舞子海上プロムナード"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    135.0330303,
+                    34.6311375
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "グリコピア神戸"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    135.0216426,
+                    34.7373412
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "豊川エースボウル"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    137.3856642,
+                    34.8011648
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "秋田ふるさと村 (Kamakuland)"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    140.545693,
+                    39.2928836
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "ぎょぎょランド"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    137.3597852,
+                    34.8468736
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "ゲームシィティー プラス"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    139.5154186,
+                    35.9037554
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Fuji-Q-Highland Park"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    138.7821089,
+                    35.4891807
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    135.7861842,
+                    35.0127553
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "まかいの牧場"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    138.584731,
+                    35.336922
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Aso Farm Land"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    131.0065547,
+                    32.8978914
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "たきかわスカイパーク"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    141.894369,
+                    43.5484385
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "小樽水族館"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    141.0111684,
+                    43.2371604
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "四季の里"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    140.3629024,
+                    37.7131844
+                ]
+            }
+        }
+    ]
+}
