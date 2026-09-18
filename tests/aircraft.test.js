@@ -31,9 +31,10 @@ test('catalog provides selectable aircraft, scaled cameras and afterburner capab
     assert.ok(definition.cockpitOffset.every(Number.isFinite));
   }
   assert.ok(AIRCRAFT[2].cameraDistance > AIRCRAFT[1].cameraDistance * 2);
-  const fallback = createJet(palette, 'unknown');
-  assert.equal(fallback.definition.id, 'f35');
-  disposeAircraft(fallback);
+  const defaultAircraft = createJet(palette);
+  assert.equal(defaultAircraft.definition.id, 'f22');
+  disposeAircraft(defaultAircraft);
+  assert.throws(() => createJet(palette, 'unknown'), RangeError);
 });
 
 test('quantize8bit clamps colors to a 256-color (3-3-2 bit) palette', () => {

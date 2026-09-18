@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { createIcons, Mountain, Camera, Aperture, VolumeX, Volume2, Pause, Play, Settings, Navigation, RotateCcw, X, Download, Maximize, Rocket, Plus, Minus } from 'lucide';
 import { FlightModel, autopilotInput, terrainHeight, EXTENT, clamp } from './flight.js';
 import { createWorld } from './world.js';
-import { AIRCRAFT, createJet, disposeAircraft } from './aircraft.js';
+import { AIRCRAFT, getAircraft, createJet, disposeAircraft } from './aircraft.js';
 import { SCENES, getScene } from './scenes.js';
 import { pitchInput, localDayPeriod } from './settings.js';
 
@@ -21,8 +21,8 @@ function boot() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.03;
   const camera = new THREE.PerspectiveCamera(56, innerWidth / innerHeight, 0.15, 42000);
-  let selectedScene = getScene('fuji');
-  let selectedAircraft = AIRCRAFT[0];
+  let selectedScene = getScene();
+  let selectedAircraft = getAircraft();
   let world = createWorld(palette, selectedScene.id);
   let aircraft = createJet(palette, selectedAircraft.id);
   world.scene.add(aircraft.jet);
@@ -51,7 +51,7 @@ function boot() {
   let engineFilter;
   let engineTone;
   let bestScore = 0;
-  const scoreKey = () => selectedScene.id === 'fuji' ? 'fuji-flight-best' : `fuji-flight-best-${selectedScene.id}`;
+  const scoreKey = () => `fuji-flight-best-${selectedScene.id}`;
   const loadBestScore = () => {
     bestScore = 0;
     try { bestScore = Number(localStorage.getItem(scoreKey())) || 0; } catch { }
@@ -250,17 +250,31 @@ function boot() {
   mapBase.width = map.width;
   mapBase.height = map.height;
   const baseContext = mapBase.getContext('2d');
-  const mapPoint = (point) => ({ x: (point.x + EXTENT) / (2 * EXTENT) * map.width, y: (point.z + EXTENT) / (2 * EXTENT) * map.height });
-  function rebuildMap() {
+  let mapBounds = [-EXTENT, -EXTENT, EXTENT, EXTENT];
+  const mapPoint = (point) => ({
+    x: (point.x - mapBounds[0]) / (mapBounds[2] - mapBounds[0]) * map.width,
+    y: (point.z - mapBounds[1]) / (mapBounds[3] - mapBounds[1]) * map.height,
+  });
+  function rebuildMap(expandedBounds) {
+    mapBounds = expandedBounds || selectedScene.mapBounds || [-EXTENT, -EXTENT, EXTENT, EXTENT];
     for (let column = 0; column < map.width; column += 4) {
       for (let row = 0; row < map.height; row += 4) {
-        const height = terrainHeight(column / map.width * 2 * EXTENT - EXTENT, row / map.height * 2 * EXTENT - EXTENT, selectedScene.id);
-        baseContext.fillStyle = palette(height < 38 ? 'water' : height > 2200 ? 'snow' : height > 1400 ? 'rock-light' : height > 700 ? 'grass-dark' : 'grass');
+        const height = terrainHeight(mapBounds[0] + column / map.width * (mapBounds[2] - mapBounds[0]),
+          mapBounds[1] + row / map.height * (mapBounds[3] - mapBounds[1]), selectedScene.id);
+        baseContext.fillStyle = palette(height < 38 ? 'water' : selectedScene.id === 'yokohama' ? 'urban'
+          : height > 2200 ? 'snow' : height > 1400 ? 'rock-light' : height > 700 ? 'grass-dark' : 'grass');
         baseContext.fillRect(column, row, 4, 4);
       }
     }
   }
   function drawMap() {
+    if (selectedScene.mapBounds) {
+      const { x, z } = flight.body.position;
+      if (x < mapBounds[0] || x > mapBounds[2] || z < mapBounds[1] || z > mapBounds[3]) {
+        rebuildMap([Math.min(mapBounds[0], x - 500), Math.min(mapBounds[1], z - 500),
+          Math.max(mapBounds[2], x + 500), Math.max(mapBounds[3], z + 500)]);
+      }
+    }
     mapContext.drawImage(mapBase, 0, 0);
     if (!flight.freeFlight) {
       mapContext.beginPath();
@@ -457,6 +471,8 @@ function boot() {
   for (const [id, options] of [['aircraft-setting', AIRCRAFT], ['scene-setting', SCENES]]) {
     for (const option of options) element(id).add(new Option(option.name, option.id));
   }
+  element('aircraft-setting').value = selectedAircraft.id;
+  element('scene-setting').value = selectedScene.id;
   function updateSelectionLabels() {
     canvas.setAttribute('aria-label', `3D flight over ${selectedScene.name}`);
     element('aircraft-label').textContent = selectedAircraft.name;
@@ -465,6 +481,9 @@ function boot() {
     element('selection-label').textContent = `${selectedAircraft.name} / ${selectedScene.name}`;
     element('location-name').textContent = `${selectedScene.name}, Japan`;
     element('location-coordinates').textContent = `${selectedScene.latitude.toFixed(4)}° N  ${selectedScene.longitude.toFixed(4)}° E`;
+    element('map-attribution').hidden = selectedScene.id !== 'yokohama';
+    element('geography-note').hidden = selectedScene.id !== 'yokohama';
+    element('map-snapshot-date').textContent = selectedScene.mapSnapshot || '';
     element('landmark').querySelector('strong').textContent = selectedScene.landmark.name.toUpperCase();
     element('landmark').querySelector('small').textContent = `${selectedScene.landmark.height.toLocaleString()} M / JAPAN`;
     const { x, z, altitude } = selectedScene.landmark;
@@ -547,8 +566,23 @@ function boot() {
   };
   element('save-photo').onclick = () => {
     renderer.render(world.scene, camera);
+    let photo = canvas;
+    if (selectedScene.id === 'yokohama') {
+      photo = document.createElement('canvas');
+      photo.width = canvas.width; photo.height = canvas.height;
+      const context = photo.getContext('2d');
+      if (!context) { notify('Photo export is unavailable in this browser'); return; }
+      context.drawImage(canvas, 0, 0);
+      const size = Math.max(12, Math.round(photo.width / 100));
+      context.fillStyle = palette('surface');
+      context.fillRect(0, photo.height - size * 3, photo.width, size * 3);
+      context.fillStyle = palette('text');
+      context.font = `${size}px sans-serif`;
+      context.fillText('© OpenStreetMap contributors · ODbL', size, photo.height - size * 1.6);
+      context.fillText('openstreetmap.org/copyright', size, photo.height - size * 0.4);
+    }
     const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
+    link.href = photo.toDataURL('image/png');
     link.download = 'fuji-flight.png';
     document.body.append(link);
     link.click();

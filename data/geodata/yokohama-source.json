@@ -1,0 +1,16 @@
+{
+  "endpoint": "https://overpass.private.coffee/api/interpreter",
+  "query": "[out:json][timeout:60];(way[\"natural\"=\"coastline\"](35.428,139.612,35.479,139.665);way[\"building\"](35.428,139.612,35.479,139.665);relation[\"building\"](35.428,139.612,35.479,139.665);way[\"highway\"](35.428,139.612,35.479,139.665);way[\"railway\"=\"rail\"](35.428,139.612,35.479,139.665);nwr[\"leisure\"=\"park\"](35.428,139.612,35.479,139.665);nwr[\"natural\"=\"water\"](35.428,139.612,35.479,139.665);nwr[\"waterway\"](35.428,139.612,35.479,139.665);nwr[\"man_made\"=\"pier\"](35.428,139.612,35.479,139.665);nwr[\"attraction\"](35.428,139.612,35.479,139.665););out geom;",
+  "snapshotDate": "2026-05-31T22:37:44Z",
+  "sha256": "1c09038e850f18180b82132f01862a4315969921c074816109df630d5a81ad20",
+  "license": "ODbL-1.0",
+  "attribution": "OpenStreetMap contributors",
+  "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+  "copyrightUrl": "https://www.openstreetmap.org/copyright",
+  "detailBounds": [
+    35.441,
+    139.625,
+    35.47,
+    139.657
+  ]
+}

@@ -77,6 +77,10 @@
       --cp-snow-shadow: #b6cdd0;
       --cp-rock: #667b84;
       --cp-rock-light: #939e9d;
+      --cp-urban: #b4b7b0;
+      --cp-road: #65717b;
+      --cp-rail: #4b565f;
+      --cp-brick: #a95e4d;
       --cp-grass-dark: #2d7164;
       --cp-grass: #52a573;
       --cp-grass-light: #bdde73;
@@ -978,6 +982,51 @@
       white-space: nowrap;
     }
 
+    #map-attribution {
+      position: fixed;
+      top: calc(max(12px, env(safe-area-inset-top)) + 80px);
+      right: max(12px, env(safe-area-inset-right));
+      z-index: 5;
+      max-width: calc(100vw - 24px);
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--cp-surface);
+      color: var(--cp-text-muted);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    #map-attribution[hidden] { display: none; }
+    #map-attribution a { color: var(--cp-link); }
+
+    body:has(#map-attribution:not([hidden])) .telemetry {
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--cp-surface);
+      color: var(--cp-text);
+    }
+
+    body:has(#map-attribution:not([hidden])) .compass-area,
+    body:has(#map-attribution:not([hidden])) .navigation {
+      border-radius: 6px;
+      background: var(--cp-surface);
+      color: var(--cp-text);
+    }
+
+    body:has(#map-attribution:not([hidden])) .camera-caption {
+      color: var(--cp-text);
+    }
+
+    body:has(#map-attribution:not([hidden])) .status-line > span {
+      padding: 2px 4px;
+      border-radius: 3px;
+      background: var(--cp-surface);
+      color: var(--cp-text);
+    }
+
+    .setting-note a { color: var(--cp-link); }
+
     .touch-controls {
       display: none;
     }
@@ -1361,7 +1410,7 @@
   <canvas id="world" aria-label="3D flight over Japan"></canvas>
   <div id="loading">
     <h1>Fuji Flight</h1>
-    <p>Preparing the mountain air...</p>
+    <p>Preparing the Yokohama waterfront...</p>
   </div>
   <div id="cockpit-frame" hidden></div>
   <main id="flight-ui" aria-label="Flight instruments">
@@ -1387,24 +1436,24 @@
       </nav>
     </header>
     <div class="location">
-      <div class="eyebrow" id="location-name">Mount Fuji, Japan</div>
-      <div class="mono" id="location-coordinates">35.3606&deg; N &nbsp; 138.7274&deg; E</div>
+      <div class="eyebrow" id="location-name">Yokohama, Japan</div>
+      <div class="mono" id="location-coordinates">35.4550&deg; N &nbsp; 139.6317&deg; E</div>
     </div>
     <section class="route" aria-label="Route progress">
       <div class="mode-switch" aria-label="Flight mode"><button id="circuit-mode"
           aria-pressed="true">Circuit</button><button id="free-mode" aria-pressed="false">Free flight</button></div>
-      <div class="route-heading"><span class="eyebrow"><span class="live-dot"></span><span id="route-title">The Fuji
+      <div class="route-heading"><span class="eyebrow"><span class="live-dot"></span><span id="route-title">Yokohama
             circuit</span></span><span id="gate-count" class="mono">01 / 08</span></div>
       <div id="route-progress" class="progress"><span
           class="active"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
       </div>
-      <h2 id="route-name" class="route-name">Lake approach</h2>
-      <div id="route-detail" class="route-detail mono">2.0 km &nbsp; / &nbsp; 1,120 m ASL</div>
+      <h2 id="route-name" class="route-name">Yamashita waterfront</h2>
+      <div id="route-detail" class="route-detail mono">1.1 km &nbsp; / &nbsp; 620 m ASL</div>
       <button id="autopilot-button" class="pilot-button" aria-pressed="true"
         title="Toggle autopilot (G); steering takes manual control"><span class="live-dot"></span><span
           id="pilot-label">AUTOPILOT ENGAGED</span><i data-lucide="navigation"></i></button>
     </section>
-    <div id="landmark"><strong>MOUNT FUJI</strong><small class="mono">3,776 M &nbsp; / &nbsp; JAPAN</small></div>
+    <div id="landmark"><strong>LANDMARK TOWER</strong><small class="mono">295.8 M &nbsp; / &nbsp; JAPAN</small></div>
     <div id="reticle" aria-hidden="true"><span></span></div>
     <div id="gate-label" class="mono"><span class="gate-number">01</span><span id="gate-distance">2.0 km</span></div>
     <div id="next-bearing" hidden title="Next checkpoint bearing"><i data-lucide="navigation"></i></div>
@@ -1441,11 +1490,11 @@
       <aside class="navigation" aria-label="Navigation map">
         <div class="map-header"><span class="eyebrow">Flight plan</span><span id="elapsed" class="mono">00:00</span>
         </div><canvas id="minimap" width="332" height="274" aria-label="Course map and aircraft position"></canvas>
-        <div class="map-footer mono"><span id="scene-label">MOUNT FUJI</span><span>N &uarr;</span></div>
+        <div class="map-footer mono"><span id="scene-label">YOKOHAMA</span><span>N &uarr;</span></div>
       </aside>
     </footer>
-    <div class="status-line mono"><span><span id="aircraft-label">F-35A</span> &nbsp; / &nbsp; <span id="flight-status">IN
-          FLIGHT</span></span><span id="best-score">FUJI CIRCUIT &nbsp; / &nbsp; 8 WAYPOINTS</span></div>
+    <div class="status-line mono"><span><span id="aircraft-label">F-22 Raptor</span> &nbsp; / &nbsp; <span id="flight-status">IN
+          FLIGHT</span></span><span id="best-score">YOKOHAMA CIRCUIT &nbsp; / &nbsp; 8 WAYPOINTS</span></div>
     <div class="touch-controls">
       <div id="stick" role="application" aria-label="Flight stick: drag to bank and pitch" title="Bank and pitch"><span
           id="stick-knob"></span></div>
@@ -1459,9 +1508,9 @@
   <div id="pause-screen" class="overlay" hidden>
     <section class="pause-panel" role="dialog" aria-modal="true" aria-labelledby="pause-title"><i
         data-lucide="mountain"></i>
-      <div class="eyebrow" id="pause-eyebrow">The Fuji circuit</div>
+      <div class="eyebrow" id="pause-eyebrow">Yokohama circuit</div>
       <h1 id="pause-title">Flight paused</h1>
-      <p id="pause-detail">Lake approach &middot; 00:00</p><button id="resume-button" class="action primary"><i
+      <p id="pause-detail">Yamashita waterfront &middot; 00:00</p><button id="resume-button" class="action primary"><i
           data-lucide="play"></i>Resume flight</button><button id="restart-button" class="action"><i
           data-lucide="rotate-ccw"></i>Restart flight</button>
     </section>
@@ -1473,7 +1522,10 @@
     </div>
     <div class="setting-inline"><label for="aircraft-setting">Aircraft</label><select id="aircraft-setting"></select></div>
     <div class="setting-inline"><label for="scene-setting">Scene</label><select id="scene-setting"></select></div>
-    <p class="setting-note">Changing scene restarts the current flight mode.</p>
+    <p class="setting-note">Yokohama is the first map-backed scene. Other locations will return with real map data.</p>
+    <p class="setting-note" id="geography-note" hidden>Yokohama's central waterfront uses mapped coastline and building footprints.
+      Missing heights, ground elevation and outer scenery are approximate. Map snapshot: <span id="map-snapshot-date"></span>.
+      <a href="https://github.com/poomnupong/demo-flighttest1/tree/main/data/geodata" target="_blank" rel="noopener">Source data and license</a>.</p>
     <div class="setting">
       <div class="setting-title">Camera</div>
       <div class="segmented" id="camera-options"><button data-camera="chase" aria-pressed="true">Chase</button><button
@@ -1494,12 +1546,12 @@
         type="checkbox"></div>
     <div class="setting-inline"><label for="day-setting">Day / night</label><select id="day-setting">
         <option value="auto">Automatic (local sun)</option>
-        <option value="day">Day</option>
+        <option value="day" selected>Day</option>
         <option value="night">Night</option>
       </select></div>
     <p class="setting-note" id="local-time" aria-live="polite"></p>
     <div class="setting-inline"><label for="light-setting">Daylight style</label><select id="light-setting">
-        <option value="morning">Alpine morning</option>
+        <option value="morning">Morning</option>
         <option value="golden">Golden hour</option>
         <option value="noon">Clear midday</option>
       </select></div>
@@ -1508,13 +1560,17 @@
         <option value="high">High</option>
         <option value="low">Low</option>
       </select></div>
-    <div class="dialog-footer"><span class="mono" id="selection-label">F-35A / MOUNT FUJI</span>
+    <div class="dialog-footer"><span class="mono" id="selection-label">F-22 Raptor / YOKOHAMA</span>
       <div class="toolbar"><button id="settings-photo" class="icon-button" title="Photo mode" aria-label="Photo mode"><i
             data-lucide="aperture"></i></button><button id="fullscreen-button" class="icon-button"
           title="Toggle fullscreen" aria-label="Toggle fullscreen"><i data-lucide="maximize"></i></button></div>
     </div>
   </dialog>
-  <div id="photo-bar" hidden><span id="photo-label" class="photo-label">FUJI / PHOTO</span><button id="save-photo" class="icon-button"
+  <aside id="map-attribution" hidden aria-label="Map data attribution">
+    © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>
+    · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>
+  </aside>
+  <div id="photo-bar" hidden><span id="photo-label" class="photo-label">YOKOHAMA / PHOTO</span><button id="save-photo" class="icon-button"
       title="Download photo" aria-label="Download photo"><i data-lucide="download"></i></button><button id="close-photo"
       class="icon-button" title="Exit photo mode (O)" aria-label="Exit photo mode"><i data-lucide="x"></i></button>
   </div>

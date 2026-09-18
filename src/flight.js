@@ -1,7 +1,7 @@
 import { Body, Sphere, Vec3, World } from 'cannon-es';
 import { Quaternion, Vector3 } from 'three';
-import { EXTENT, getScene, groundHeight, intersectsScenery, clamp, lerp } from './scenes.js';
-export { CELL, EXTENT, FUJI, terrainHeight, groundHeight, lakeDistance, clamp, lerp } from './scenes.js';
+import { DEFAULT_SCENE, EXTENT, getScene, groundHeight, intersectsScenery, clamp, lerp } from './scenes.js';
+export { CELL, EXTENT, terrainHeight, groundHeight, lakeDistance, clamp, lerp } from './scenes.js';
 
 export const ROUTE = getScene().route;
 export const GATE_RADIUS = 165;
@@ -43,7 +43,7 @@ export function autopilotInput(flight) {
 }
 
 export class FlightModel {
-  constructor(sceneId = 'fuji') {
+  constructor(sceneId = DEFAULT_SCENE) {
     this.world = new World({ gravity: new Vec3(0, -9.81, 0) });
     this.body = new Body({ mass: 13000, shape: new Sphere(4), linearDamping: 0, angularDamping: 1 });
     this.world.addBody(this.body);

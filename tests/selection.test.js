@@ -12,7 +12,7 @@ const sceneHandler = source.slice(source.indexOf("  element('scene-setting').onc
 const lighting = source.slice(source.indexOf('  function applyLighting()'), source.indexOf("  element('fullscreen-button').onclick"));
 const selectionLabels = source.slice(source.indexOf('  function updateSelectionLabels()'), source.indexOf("  element('aircraft-setting').onchange"));
 
-test('photo mode labels follow the selected scene, including switching back to Fuji', () => {
+test('photo mode labels follow the mapped scene', () => {
   const template = readFileSync(new URL('../src/template.html', import.meta.url), 'utf8');
   assert.ok(/<span id="photo-label" class="photo-label">/.test(template), 'photo label has a stable DOM id');
   const elements = new Map();
@@ -22,7 +22,7 @@ test('photo mode labels follow the selected scene, including switching back to F
   };
   const context = {
     element, canvas: { setAttribute() {} }, landmarkPosition: new THREE.Vector3(),
-    selectedAircraft: { name: 'F-35A', supportsAfterburner: true },
+    selectedAircraft: { name: 'F-22 Raptor', supportsAfterburner: true },
   };
   for (const selectedScene of [...SCENES, SCENES[0]]) {
     context.selectedScene = selectedScene;
@@ -38,12 +38,11 @@ test('every scene positions its landmark label at a finite world-space summit or
   for (const selectedScene of SCENES) {
     const context = {
       element, canvas: element(), selectedScene, landmarkPosition,
-      selectedAircraft: { name: 'F-35A', supportsAfterburner: true },
+      selectedAircraft: { name: 'F-22 Raptor', supportsAfterburner: true },
     };
     runInNewContext(`${selectionLabels}\nupdateSelectionLabels();`, context);
     const { x, z, height } = selectedScene.landmark;
-    const expectedAltitude = ['fuji', 'alps'].includes(selectedScene.id)
-      ? height : groundHeight(x, z, selectedScene.id) + height;
+    const expectedAltitude = groundHeight(x, z, selectedScene.id) + height;
     assert.deepEqual(landmarkPosition.toArray(), [x, expectedAltitude, z], selectedScene.name);
     camera.position.set(x, expectedAltitude, z + 1000);
     camera.lookAt(landmarkPosition);
@@ -65,7 +64,7 @@ test('scene selection disposes the old world, resets its flight, and remains pau
     const calls = [];
     const nextWorld = { scene: { add: () => calls.push('attach') } };
     const context = {
-      element, selectedScene: { id: 'fuji' }, aircraft: { jet: {} }, palette() {},
+      element, selectedScene: { id: 'previous-map-fixture' }, aircraft: { jet: {} }, palette() {},
       world: { scene: { remove: () => calls.push('detach') }, dispose: () => calls.push('dispose') },
       getScene: (id) => ({ id }),
       createWorld: () => nextWorld,
@@ -78,12 +77,12 @@ test('scene selection disposes the old world, resets its flight, and remains pau
       applyLighting: () => calls.push('lighting'),
     };
     runInNewContext(sceneHandler, context);
-    element('scene-setting').onchange({ target: { value: 'tokyo' } });
-    assert.equal(context.selectedScene.id, 'tokyo');
+    element('scene-setting').onchange({ target: { value: 'yokohama' } });
+    assert.equal(context.selectedScene.id, 'yokohama');
     assert.equal(context.world, nextWorld);
     assert.equal(context.flight.paused, true);
     assert.deepEqual(calls, ['detach', 'dispose', 'attach', 'reset', 'score', 'map', 'labels', 'lighting']);
-    element('scene-setting').onchange({ target: { value: 'tokyo' } });
+    element('scene-setting').onchange({ target: { value: 'yokohama' } });
     assert.equal(calls.length, 8, 'reselecting the active scene is a no-op');
   }
 });
@@ -103,7 +102,7 @@ test('lighting changes the real world sky, sun, ambient light, stars and moon wi
   t.after(() => world.dispose());
   const context = {
     THREE, element, palette, localDayPeriod,
-    selectedScene: { latitude: 35.36, longitude: 138.73 }, lightMinute: -1, dayPeriod: 'day',
+    selectedScene: { latitude: 35.455, longitude: 139.6317 }, lightMinute: -1, dayPeriod: 'day',
     world,
     renderer: {},
   };

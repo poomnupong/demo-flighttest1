@@ -10,6 +10,13 @@ export const AIRCRAFT = [
   { id: 'f22', name: 'F-22 Raptor', cameraDistance: 104, cockpitOffset: [0, 4, -10.4], supportsAfterburner: true },
   { id: 'b787', name: 'Boeing 787-8 · Japan Airlines inspired', cameraDistance: 290, cockpitOffset: [0, 4.2, -48], supportsAfterburner: false },
 ];
+export const DEFAULT_AIRCRAFT = 'f22';
+
+export function getAircraft(id = DEFAULT_AIRCRAFT) {
+  const aircraft = AIRCRAFT.find((entry) => entry.id === id);
+  if (!aircraft) throw new RangeError(`Unknown aircraft: ${id}`);
+  return aircraft;
+}
 
 // 8-bit (256-color) palette quantization: RGB332 (3 red bits, 3 green bits, 2 blue bits),
 // giving the blocky aircraft a retro, limited-palette look.
@@ -30,8 +37,8 @@ export function quantize8bit(hex) {
   return `#${channel(0, QUANTIZE_RED_BITS)}${channel(1, QUANTIZE_GREEN_BITS)}${channel(2, QUANTIZE_BLUE_BITS)}`;
 }
 
-export function createJet(palette, id = 'f35') {
-  const definition = AIRCRAFT.find((aircraft) => aircraft.id === id) || AIRCRAFT[0];
+export function createJet(palette, id = DEFAULT_AIRCRAFT) {
+  const definition = getAircraft(id);
   const airliner = definition.id === 'b787';
   const raptor = definition.id === 'f22';
   const length = airliner ? 56.7 : raptor ? 18.9 : 15.7;

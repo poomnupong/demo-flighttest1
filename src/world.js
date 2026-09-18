@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GATE_RADIUS, gateRotation, routeNormals } from './flight.js';
-import { CELL, EXTENT, getScene, terrainHeight as sampleTerrain, groundHeight as sampleGround, lakeDistance as sampleWater, clamp } from './scenes.js';
+import { DEFAULT_SCENE, CELL, EXTENT, getScene, terrainHeight as sampleTerrain, groundHeight as sampleGround } from './scenes.js';
 
 export function disposeObject(object) {
   const resources = new Set();
@@ -15,11 +15,10 @@ export function disposeObject(object) {
   for (const resource of resources) resource.dispose();
 }
 
-export function createWorld(palette, sceneId = 'fuji') {
+export function createWorld(palette, sceneId = DEFAULT_SCENE) {
   const descriptor = getScene(sceneId);
   const terrainHeight = (x, z) => sampleTerrain(x, z, sceneId);
   const groundHeight = (x, z) => sampleGround(x, z, sceneId);
-  const lakeDistance = (x, z) => sampleWater(x, z, sceneId);
   const gateNormals = routeNormals(descriptor.route, descriptor.spawn);
   const tint = (name) => new THREE.Color(palette(name));
   const scene = new THREE.Scene();
@@ -79,29 +78,15 @@ export function createWorld(palette, sceneId = 'fuji') {
     scene.add(mesh);
     return mesh;
   }
-  const grassDark = tint('grass-dark');
-  const grass = tint('grass');
-  const grassLight = tint('grass-light');
-  const rock = tint('rock');
-  const rockLight = tint('rock-light');
-  const snow = tint('snow');
-  const snowShadow = tint('snow-shadow');
   const groundBlocks = [];
   for (let worldX = -EXTENT + CELL / 2; worldX < EXTENT; worldX += CELL) {
     for (let worldZ = -EXTENT + CELL / 2; worldZ < EXTENT; worldZ += CELL) {
+      if (descriptor.containsDetail(worldX, worldZ)) continue;
       const height = terrainHeight(worldX, worldZ);
-      const angle = Math.atan2(worldZ - descriptor.landmark.z, worldX - descriptor.landmark.x);
-      const snowline = 2200 + Math.sin(angle * 8) * 170 + Math.sin(angle * 15) * 70;
-      const variation = random();
-      let shade;
-      if (height > snowline) shade = snowShadow.clone().lerp(snow, clamp((height - snowline) / 330 + variation * 0.3, 0.25, 1));
-      else if (height > 1500) shade = rock.clone().lerp(rockLight, variation * 0.35 + (height - 1500) / 1600);
-      else if (height > 750) shade = grassDark.clone().lerp(rock, (height - 750) / 1000).lerp(grass, variation * 0.18);
-      else shade = grassDark.clone().lerp(grass, 0.35 + variation * 0.32).lerp(grassLight, clamp((450 - height) / 1100 + Math.sin(worldX * 0.001 + worldZ * 0.0007) * 0.12, 0, 0.5));
-      if (lakeDistance(worldX, worldZ) > 0.98 && lakeDistance(worldX, worldZ) < 1.07 && height < 80) shade.lerp(tint('wall'), 0.65);
-      groundBlocks.push({ position: [worldX, (height - 170) / 2, worldZ], size: [CELL + 0.3, height + 170, CELL + 0.3], color: shade });
+      groundBlocks.push({ position: [worldX, (height - 170) / 2, worldZ], size: [CELL, height + 170, CELL], color: tint('urban') });
     }
   }
+  groundBlocks.push(...descriptor.groundBlocks().map((block) => ({ ...block, color: tint(block.color) })));
   const terrain = blockBatch(groundBlocks);
   terrain.name = 'Voxel terrain';
   const water = new THREE.Mesh(new THREE.BoxGeometry(EXTENT * 2, 2, EXTENT * 2), new THREE.MeshStandardMaterial({
@@ -122,18 +107,14 @@ export function createWorld(palette, sceneId = 'fuji') {
   const glints = blockBatch(sparkles, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5, depthWrite: false }));
   const trees = [];
   const bark = tint('bark');
-  for (let treeIndex = 0; treeIndex < 8400; treeIndex++) {
-    const worldX = (random() - 0.5) * 18400;
-    const worldZ = (random() - 0.5) * 18400;
-    const height = groundHeight(worldX, worldZ);
-    if (height < 78 || height > 1680 || lakeDistance(worldX, worldZ) < 1.10 || random() > 0.8
-      || descriptor.blocks.some(({ position: [x, , z], size: [w, , d] }) => Math.abs(worldX - x) < w / 2 + 45 && Math.abs(worldZ - z) < d / 2 + 45)) continue;
-    const size = 22 + random() * 32;
-    const shade = tint('pine').lerp(tint('pine-light'), random() * 0.8);
-    trees.push({ position: [worldX, height + size * 0.48, worldZ], size: [size * 0.22, size, size * 0.22], color: bark });
-    for (let level = 0; level < 3; level++) {
-      trees.push({ position: [worldX, height + size * (0.9 + level * 0.42), worldZ], size: [size * (1.12 - level * 0.3), size * 0.6, size * (1.12 - level * 0.3)], color: shade.clone().lerp(grassLight, level * 0.08) });
-    }
+  const [minX, minZ, maxX, maxZ] = descriptor.detailBounds;
+  for (let x = minX + 15; x < maxX; x += 35) for (let z = minZ + 15; z < maxZ; z += 35) {
+    if (descriptor.sampleSurface(x, z) !== 3) continue;
+    const occupied = [...descriptor.nearbyBounds(x - 8, z - 8, x + 8, z + 8)].some(({ min, max }) =>
+      max.y > 46.5 && x + 8 > min.x && x - 8 < max.x && z + 8 > min.z && z - 8 < max.z);
+    if (occupied) continue;
+    trees.push({ position: [x, 50, z], size: [2, 8, 2], color: bark },
+      { position: [x, 57, z], size: [11, 9, 11], color: tint('pine-light') });
   }
   blockBatch(trees);
   const landmarks = blockBatch(descriptor.blocks.map((block) => ({ ...block, color: tint(block.color) })));
@@ -198,107 +179,4 @@ export function createWorld(palette, sceneId = 'fuji') {
       scene.clear();
     },
   };
-}
-
-export function createJet(palette) {
-  const jet = new THREE.Group();
-  jet.name = 'F-35A inspired aircraft';
-  const material = (name, options = {}) => new THREE.MeshStandardMaterial({ color: palette(name), roughness: 0.54, metalness: 0.35, flatShading: true, ...options });
-  const bodyMaterial = material('jet');
-  const lightMaterial = material('jet-light');
-  const darkMaterial = material('jet-dark');
-  const glassMaterial = material('glass', { metalness: 0.72, roughness: 0.19 });
-  const frameMaterial = material('glass-light', { metalness: 0.65, roughness: 0.22 });
-  const geometryFromFaces = (vertices, indices) => {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices.flat(), 3));
-    geometry.setIndex(indices);
-    geometry.computeVertexNormals();
-    return geometry;
-  };
-  function hull(sections, surface) {
-    const vertices = [];
-    const indices = [];
-    for (const [depth, width, bottom, top] of sections) {
-      const bevel = (top - bottom) * 0.2;
-      vertices.push([-width * 0.6, bottom, depth], [width * 0.6, bottom, depth], [width, bottom + bevel, depth], [width, top - bevel, depth], [width * 0.55, top, depth], [-width * 0.55, top, depth], [-width, top - bevel, depth], [-width, bottom + bevel, depth]);
-    }
-    for (let section = 0; section < sections.length - 1; section++) {
-      for (let corner = 0; corner < 8; corner++) {
-        const start = section * 8 + corner;
-        const next = section * 8 + (corner + 1) % 8;
-        indices.push(start, next, start + 8, next, next + 8, start + 8);
-      }
-    }
-    for (let corner = 1; corner < 7; corner++) {
-      indices.push(0, corner + 1, corner);
-      const offset = (sections.length - 1) * 8;
-      indices.push(offset, offset + corner, offset + corner + 1);
-    }
-    const mesh = new THREE.Mesh(geometryFromFaces(vertices, indices), surface);
-    jet.add(mesh);
-    return mesh;
-  }
-  function plate(points, bottom, top, surface) {
-    const vertices = [...points.map(([worldX, worldZ]) => [worldX, top, worldZ]), ...points.map(([worldX, worldZ]) => [worldX, bottom, worldZ])];
-    const count = points.length;
-    const indices = [];
-    const triangles = THREE.ShapeUtils.triangulateShape(points.map(([worldX, worldZ]) => new THREE.Vector2(worldX, worldZ)), []);
-    for (const [first, second, third] of triangles) indices.push(third, second, first, first + count, second + count, third + count);
-    for (let edge = 0; edge < count; edge++) {
-      const next = (edge + 1) % count;
-      indices.push(edge, next, edge + count, next, next + count, edge + count);
-    }
-    const mesh = new THREE.Mesh(geometryFromFaces(vertices, indices), surface);
-    jet.add(mesh);
-    return mesh;
-  }
-  hull([[-14, 0.04, 0.1, 0.2], [-10, 0.85, -0.45, 0.85], [-6, 1.55, -0.85, 1.35], [-1, 2.15, -1.1, 1.65], [4, 2.25, -1.05, 1.35], [8, 1.65, -0.65, 0.95], [10, 1.25, -0.45, 0.8]], bodyMaterial);
-  hull([[-8.3, 0.05, 1.12, 1.22], [-6.4, 0.82, 1.2, 2.6], [-3.2, 1.01, 1.42, 2.95], [-1.2, 0.78, 1.55, 2.18], [-0.4, 0.32, 1.58, 1.7]], glassMaterial);
-  hull([[-6.7, 0.84, 1.18, 2.48], [-6.45, 0.88, 1.20, 2.66]], frameMaterial);
-  for (const side of [-1, 1]) {
-    const mirrored = (points) => points.map(([worldX, worldZ]) => [worldX * side, worldZ]);
-    plate(mirrored([[1.4, -4.2], [9.9, 3.6], [10.2, 5.7], [3.2, 4.8], [1.7, 2.5]]), 0.05, 0.4, lightMaterial);
-    plate(mirrored([[3.2, 3.3], [9.9, 4.6], [10.2, 5.7], [3.2, 4.8]]), 0.12, 0.43, bodyMaterial);
-    plate(mirrored([[1.2, 5.7], [5.7, 8.3], [5.2, 10.6], [1.3, 9.1]]), 0.15, 0.43, bodyMaterial);
-    plate(mirrored([[1.2, -7], [2.9, -3.5], [2.6, 2.2], [1.7, 1]]), -0.4, 0.38, bodyMaterial);
-    const tailVertices = [[side * 1.8, 0.8, 4.2], [side * 3.9, 5.3, 6.7], [side * 4.0, 5.4, 9], [side * 2, 0.9, 9.5]];
-    const fin = new THREE.Mesh(geometryFromFaces(tailVertices, [0, 1, 2, 0, 2, 3]), material('jet', { side: THREE.DoubleSide }));
-    jet.add(fin);
-    const cap = new THREE.Mesh(geometryFromFaces([[side * 3.7, 4.9, 6.4], tailVertices[1], tailVertices[2], [side * 3.8, 5, 9.1]], [0, 1, 2, 0, 2, 3]), material('jet-dark', { side: THREE.DoubleSide }));
-    jet.add(cap);
-    const intake = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.25, 0.25), glassMaterial);
-    intake.position.set(side * 1.92, -0.06, -3.7);
-    intake.rotation.y = side * -0.22;
-    jet.add(intake);
-    const roundelBase = new THREE.Mesh(new THREE.CircleGeometry(0.65, 24), lightMaterial);
-    roundelBase.rotation.x = -Math.PI / 2;
-    roundelBase.position.set(side * 6.2, 0.455, 3.15);
-    jet.add(roundelBase);
-    const roundel = new THREE.Mesh(new THREE.CircleGeometry(0.43, 24), material('torii'));
-    roundel.rotation.x = -Math.PI / 2;
-    roundel.position.set(side * 6.2, 0.465, 3.15);
-    jet.add(roundel);
-    const wingLight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.8), new THREE.MeshBasicMaterial({ color: palette(side < 0 ? 'torii' : 'grass-light') }));
-    wingLight.position.set(side * 9.9, 0.43, 4.1);
-    jet.add(wingLight);
-  }
-  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.25, 1.9, 12, 1, true), darkMaterial);
-  nozzle.rotation.x = Math.PI / 2;
-  nozzle.position.set(0, 0.08, 9.9);
-  jet.add(nozzle);
-  const exhaustDisk = new THREE.Mesh(new THREE.CircleGeometry(0.91, 24), new THREE.MeshBasicMaterial({ color: palette('exhaust') }));
-  exhaustDisk.position.set(0, 0.08, 10.87);
-  jet.add(exhaustDisk);
-  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.88, 7, 12, 1, true), new THREE.MeshBasicMaterial({ color: palette('exhaust'), transparent: true, opacity: 0.38, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
-  flame.rotation.x = Math.PI / 2;
-  flame.position.set(0, 0.08, 13);
-  jet.add(flame);
-  const panelLines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(-1, 1.69, -0.4), new THREE.Vector3(-1, 1.44, 4),
-    new THREE.Vector3(1, 1.69, -0.4), new THREE.Vector3(1, 1.44, 4),
-    new THREE.Vector3(-1, 1.44, 4), new THREE.Vector3(1, 1.44, 4),
-  ]), new THREE.LineBasicMaterial({ color: palette('jet-dark'), transparent: true, opacity: 0.65 }));
-  jet.add(panelLines);
-  return { jet, flame, exhaustDisk };
 }
