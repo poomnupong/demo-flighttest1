@@ -21,7 +21,7 @@ if (input !== -1) {
 } else {
   const url = `${endpoint}?data=${encodeURIComponent(query)}`;
   const response = await fetch(url, {
-    headers: { 'User-Agent': 'FujiFlight-offline-geodata/1.0 (https://github.com/poomnupong/demo-flighttest1)' },
+    headers: { 'User-Agent': 'AtlasFlight-offline-geodata/1.0 (https://github.com/poomnupong/demo-flighttest1)' },
     signal: AbortSignal.timeout(120000),
   });
   if (!response.ok) throw new Error(`Yokohama snapshot download failed: HTTP ${response.status}. Existing snapshot retained.`);
@@ -49,7 +49,7 @@ const metadata = {
 };
 const path = 'data/geodata/raw/yokohama-osm.json.gz';
 const compressed = gzipSync(bytes, { level: 9 }), manifest = `${JSON.stringify(metadata, null, 2)}\n`;
-const staging = await mkdtemp(join(tmpdir(), 'fuji-yokohama-download-'));
+const staging = await mkdtemp(join(tmpdir(), 'atlas-yokohama-download-'));
 try {
   await mkdir(join(staging, 'data/geodata/raw'), { recursive: true });
   await mkdir(join(staging, 'src/data'), { recursive: true });

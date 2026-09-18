@@ -64,6 +64,7 @@ test('Yokohama photo exports include attribution without modifying the WebGL can
     runInNewContext(code, context);
     button.onclick();
     assert.equal(link.clicked, true);
+    assert.equal(link.download, 'atlas-flight.png');
     assert.equal(link.href, scene === 'yokohama' ? 'data:image/png;attributed' : 'data:image/png;original');
     if (scene === 'yokohama') {
       assert.ok(texts.some((text) => text.includes('OpenStreetMap contributors')));

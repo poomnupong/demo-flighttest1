@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createIcons, Mountain, Camera, Aperture, VolumeX, Volume2, Pause, Play, Settings, Navigation, RotateCcw, X, Download, Maximize, Rocket, Plus, Minus } from 'lucide';
+import { createIcons, Globe, Camera, Aperture, VolumeX, Volume2, Pause, Play, Settings, Navigation, RotateCcw, X, Download, Maximize, Rocket, Plus, Minus } from 'lucide';
 import { FlightModel, autopilotInput, terrainHeight, EXTENT, clamp } from './flight.js';
 import { createWorld } from './world.js';
 import { AIRCRAFT, getAircraft, createJet, disposeAircraft } from './aircraft.js';
@@ -10,7 +10,7 @@ function boot() {
   const element = (id) => document.getElementById(id);
   const styles = getComputedStyle(document.documentElement);
   const palette = (name) => styles.getPropertyValue(`--cp-${name}`).trim();
-  const icons = { Mountain, Camera, Aperture, VolumeX, Volume2, Pause, Play, Settings, Navigation, RotateCcw, X, Download, Maximize, Rocket, Plus, Minus };
+  const icons = { Globe, Camera, Aperture, VolumeX, Volume2, Pause, Play, Settings, Navigation, RotateCcw, X, Download, Maximize, Rocket, Plus, Minus };
   const refreshIcons = () => createIcons({ icons, attrs: { 'stroke-width': 1.6 } });
   refreshIcons();
   const canvas = element('world');
@@ -51,6 +51,7 @@ function boot() {
   let engineFilter;
   let engineTone;
   let bestScore = 0;
+  // Retain the storage namespace so rebranding does not reset saved scores.
   const scoreKey = () => `fuji-flight-best-${selectedScene.id}`;
   const loadBestScore = () => {
     bestScore = 0;
@@ -583,7 +584,7 @@ function boot() {
     }
     const link = document.createElement('a');
     link.href = photo.toDataURL('image/png');
-    link.download = 'fuji-flight.png';
+    link.download = 'atlas-flight.png';
     document.body.append(link);
     link.click();
     link.remove();
@@ -666,6 +667,7 @@ function boot() {
     }
     frameCount++;
   }
+  // Preserve the diagnostic API name used by existing browser tooling.
   window.fujiFlight = Object.freeze({
     getState: () => ({
       ready: true, frames: frameCount,

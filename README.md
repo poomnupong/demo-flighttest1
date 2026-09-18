@@ -1,8 +1,8 @@
-# Fuji Flight
+# Atlas Flight
 
 **[Play in your browser](https://poomnupong.github.io/demo-flighttest1/)** | [Source on GitHub](https://github.com/poomnupong/demo-flighttest1)
 
-The repository is named **demo-flighttest1**; the game is called **Fuji Flight**. Open the play link in Safari on iPhone or a current Android browser. Touch controls support portrait and landscape. A modern device with WebGL 2 is required; use the lower render-quality setting if performance is slow.
+The repository is named **demo-flighttest1**; the game is called **Atlas Flight**. The map-neutral name reflects exploring real places, starting with Yokohama and expanding to more map-backed locations. Open the play link in Safari on iPhone or a current Android browser. Touch controls support portrait and landscape. A modern device with WebGL 2 is required; use the lower render-quality setting if performance is slow.
 
 Open **[index.html](index.html)** in a current browser with WebGL 2 support. The game is one self-contained HTML file: all code, libraries, geometry, colors, icons, and synthesized audio are embedded. No server, network connection, installation, or external assets are needed to play.
 

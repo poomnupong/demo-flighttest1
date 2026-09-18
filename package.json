@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Fuji Flight: a mobile-friendly, offline-capable flight game built with GitHub Copilot.",
+  "description": "Atlas Flight: a mobile-friendly, offline-capable flight game built with GitHub Copilot.",
   "homepage": "https://poomnupong.github.io/demo-flighttest1/",
   "repository": {
     "type": "git",

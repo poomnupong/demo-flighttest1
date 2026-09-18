@@ -224,7 +224,7 @@ test('detailed terrain is emitted once and stays within the scene instance budge
 });
 
 test('geographic compilation is reproducible, offline, and rejects modified snapshots', (t) => {
-  const root = mkdtempSync(join(tmpdir(), 'fuji-yokohama-'));
+  const root = mkdtempSync(join(tmpdir(), 'atlas-yokohama-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(join(root, 'data/geodata/raw'), { recursive: true });
   mkdirSync(join(root, 'src/data'), { recursive: true });
